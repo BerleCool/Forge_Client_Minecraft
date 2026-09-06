@@ -1,16 +1,17 @@
 {
-  "jar": "build/libs/forge-client-0.1.0-alpha.jar",
-  "bytes": 115033,
-  "sha256": "f4550bedcd9db7f4a693fbf969f61ce79244319b31bd3f1251aa21019e8f5209",
+  "jar": "build/libs/forge-client-0.2.0-alpha.jar",
+  "bytes": 156194,
+  "sha256": "bc594e1fcd225720e559775a0f386e8c8982a701e928c1275cbb4f8d2559f3c8",
   "java_major": 52,
-  "classes": 38,
+  "classes": 41,
   "mod": {
     "modid": "forgeclient",
     "name": "Forge Client",
     "description": "Client-side HUD, visual, utility and performance modules. Development alpha; manual game QA still required. Independent of Minecraft Forge.",
-    "version": "0.1.0-alpha",
+    "version": "0.2.0-alpha",
     "mcversion": "1.8.9",
     "url": "https://github.com/BerleCool/Forge_Client_Minecraft",
+    "logoFile": "assets/forgeclient/textures/gui/logo.jpg",
     "authorList": [
       "Forge Client / The Gideon Project"
     ],

@@ -4,10 +4,10 @@
   "java": "1.8.0_504",
   "groupsPassed": 40,
   "groupsFailed": 0,
-  "assertions": 11294,
-  "elapsedMillis": 915,
+  "assertions": 11464,
+  "elapsedMillis": 1219,
   "groups": [
-    {"name":"43 modules, unique ids, category sizes and conservative defaults","passed":true,"assertions":379},
+    {"name":"Lunar catalog parity, unique ids and conservative defaults","passed":true,"assertions":549},
     {"name":"Numeric validation, quantization, clamping and non-finite rejection","passed":true,"assertions":17},
     {"name":"Boolean and choice validation, reverse cycle, reset","passed":true,"assertions":8},
     {"name":"Module revision changes only for mutations","passed":true,"assertions":4},
