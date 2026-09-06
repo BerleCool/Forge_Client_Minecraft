@@ -1,22 +1,35 @@
-# Forge Client 0.2 performance and Lunar parity baseline
+# Forge Client 0.3 - functional Lunar baseline and performance notes
 
-## Hypixel latency diagnosis
+## No placeholder modules
 
-Forge Client 0.1 did not inject packets or send background telemetry. Its Ping HUD only reads the `NetworkPlayerInfo` value vanilla already receives. Minecraft 1.8.9 already enables TCP_NODELAY, so Forge deliberately does not ship a placebo TcpNoDelay patch. Main-thread frame stalls can nevertheless make packet-driven game state feel late.
+Forge Client 0.2 exposed Lunar/Apollo names that were deliberately marked `PORTING`. That was useful as a roadmap, but it was a bad client experience.
 
-## 0.2 hot-path changes
+0.3 removes that model entirely. **The live module catalog contains only toggleable modules with concrete Minecraft 1.8.9 behavior.** The public Lunar/Apollo 98-name list remains in source only as reference metadata; it does not inject fake entries into the client.
 
-- Stable cached module/HUD views replace a new `ArrayList` allocation on every `all()` call.
-- HUD rendering iterates HUD entries only.
-- `NativeCanvas` uses a fixed primitive transform stack instead of a new `double[]` per HUD widget per frame.
-- Configuration revision scans are amortized to 4 Hz; closing Forge's UI snapshots immediately.
-- Existing telemetry stays local and bounded; no server probes were added.
-- Smart FPS only limits menus/unfocused windows and never focused gameplay.
+Forge 0.3 has **89 live modules**. The new Lunar-inspired set covers practical 1.8.9 features such as Hypixel/Bed Wars/SkyBlock HUDs, Quickplay, attack/potion/combo/cooldown HUDs, scoreboard mirror, local chat controls, WorldEdit CUI, stopwatch, time/weather/fog controls, item physics, TNT countdown, item tracking, momentum, boss bar control, PvP/team/UHC overlays, markers, minimap, hitbox/chunk/light overlays, WAILA, hurt-cam suppression, horse stats, replay/rewind trails, movable action bar, inventory/F3/GUI-scale helpers, knockback trainer and lightweight NEU/SBA-style SkyBlock inspectors.
 
-## Lunar module parity
+Some names in Lunar's current cross-version catalog do not make sense as honest standalone 1.8.9 toggles (for example Shulker Preview, Totem Counter and Shields), while others are entire third-party products rather than a small module. Forge does **not** show those as dead switches.
 
-The current public Lunar module catalog is imported as a surface baseline from the MIT-licensed `LunarClient/Apollo` repository. Functional Forge modules with genuinely overlapping behavior satisfy their matching Lunar entry. Missing entries appear as `PORTING` targets and are intentionally non-toggleable until a real 1.8.9 handler exists. This is complete catalog visibility, **not yet 98/98 native behavior parity**.
+## Replay / NEU / SBA scope
+
+The 1.8.9 `Replay Mod` entry in Forge 0.3 is a bounded **local movement recorder/trail**, not a claim that we reimplemented ReplayMod's packet recording/export pipeline.
+
+`NotEnoughUpdates` and `SkyBlockAddons` are lightweight client-received-data inspectors/status HUDs in this alpha. They are functional, but they are not claims of feature-for-feature copies of the separate NEU/SBA projects.
+
+## Performance / Hypixel latency
+
+Forge Client does not inject packets, ping servers in the background or run telemetry. Ping widgets read the latency value Minecraft already receives.
+
+0.2/0.3 keep the hot-path changes that:
+- cache module/HUD views instead of allocating lists every frame,
+- iterate HUD entries directly,
+- avoid per-widget transform-array allocations,
+- amortize configuration revision work,
+- budget world scans used by minimap/light overlays,
+- keep all new server-aware features on data already present in the client.
+
+This can reduce main-thread stalls that make multiplayer *feel* late. It cannot lower physical network RTT. Hypixel responsiveness still needs controlled in-game A/B testing.
 
 ## OptiFine
 
-OptiFine is proprietary. Its official copyright terms prohibit public redistribution without advance written permission, so the public Forge Client JAR does not bundle it. Forge 0.2 detects and coexists with a separately installed OptiFine copy.
+OptiFine remains optional and separately installed. Forge detects it for coexistence but does not redistribute proprietary OptiFine files.
