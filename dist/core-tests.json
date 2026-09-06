@@ -1,11 +1,11 @@
 {
   "scope": "Core, shared UI, persistence and policies; not Minecraft runtime",
   "minecraftRuntimeTested": false,
-  "java": "17.0.20.1",
+  "java": "1.8.0_504",
   "groupsPassed": 40,
   "groupsFailed": 0,
   "assertions": 11294,
-  "elapsedMillis": 873,
+  "elapsedMillis": 915,
   "groups": [
     {"name":"43 modules, unique ids, category sizes and conservative defaults","passed":true,"assertions":379},
     {"name":"Numeric validation, quantization, clamping and non-finite rejection","passed":true,"assertions":17},
