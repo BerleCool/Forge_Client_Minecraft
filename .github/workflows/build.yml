@@ -1,0 +1,75 @@
+name: Build Forge Client 1.8.9
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feat/forge-client-foundation
+    paths-ignore:
+      - 'dist/**'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Compile, test and remap JAR
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Java 8
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+
+      - name: Set up Gradle 8.8
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.8'
+
+      - name: Compile, test and remap
+        run: gradle --no-daemon clean check remapJar --stacktrace
+
+      - name: Verify and stage distributable
+        shell: bash
+        run: |
+          set -euo pipefail
+          source_jar="build/libs/forge-client-0.1.0-alpha.jar"
+          output_jar="dist/Forge-Client-1.8.9-0.1.0-alpha.jar"
+          test -f "$source_jar"
+          mkdir -p dist
+          cp "$source_jar" "$output_jar"
+          jar tf "$output_jar" | grep -q '^dev/forgeclient/minecraft/ForgeClient.class$'
+          jar tf "$output_jar" | grep -q '^mcmod.info$'
+          sha256sum "$output_jar" > "$output_jar.sha256"
+          echo "Built $(du -h "$output_jar" | cut -f1) distributable"
+          cat "$output_jar.sha256"
+
+      - name: Upload Actions artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Forge-Client-1.8.9-0.1.0-alpha
+          path: |
+            dist/Forge-Client-1.8.9-0.1.0-alpha.jar
+            dist/Forge-Client-1.8.9-0.1.0-alpha.jar.sha256
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish JAR to repository branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add dist/Forge-Client-1.8.9-0.1.0-alpha.jar dist/Forge-Client-1.8.9-0.1.0-alpha.jar.sha256
+          if git diff --cached --quiet; then
+            echo 'Distributable is already current.'
+            exit 0
+          fi
+          git commit -m 'build: publish Forge Client 0.1.0-alpha jar [skip ci]'
+          git push origin "HEAD:${GITHUB_REF_NAME}"
