@@ -1,6 +1,6 @@
 # Forge Client
 
-Forge Client is a client-side Minecraft 1.8.9 mod for **Minecraft Forge 11.15.1.2318**. The 0.2 alpha combines a full-screen, Right-Shift module interface with a Lunar-derived module catalog baseline, a Dawn-inspired custom title screen, local HUD/visual utilities, and a lower-allocation gameplay path in a dark Minecraft-inspired orange theme.
+Forge Client is a client-side Minecraft **1.8.9** mod for **Minecraft Forge 11.15.1.2318**. The current 0.3 alpha combines a full-screen Right-Shift module UI, a resolution-independent Dawn-inspired title screen, performance-conscious HUD/rendering code and a large set of practical Lunar-inspired 1.8.9 features.
 
 > Forge Client is our product name and is independent of the Minecraft Forge project.
 
@@ -9,51 +9,41 @@ Forge Client is a client-side Minecraft 1.8.9 mod for **Minecraft Forge 11.15.1.
 - Minecraft: **1.8.9 only**
 - Loader: **Minecraft Forge 1.8.9**
 - Open client: **Right Shift**
-- Catalog: **current 98-module Lunar Apollo baseline** plus Forge-specific extras; only entries with real 1.8.9 handlers are toggleable
+- Live catalog: **89 implemented modules**
+- Placeholder / `PORTING` toggles: **0**
 - Configuration: local profiles and persistent HUD placement
-- Networking: no Forge Client telemetry or remote service
+- Networking: no Forge Client telemetry or background server probes
 
 The compiled development alpha is published by GitHub Actions to:
 
-`dist/Forge-Client-1.8.9-0.2.0-alpha.jar`
+`dist/Forge-Client-1.8.9-0.3.0-alpha.jar`
 
-A matching `.sha256` file is generated beside it. The same files are also retained as a GitHub Actions artifact for each successful build.
+A matching SHA-256 file and build/test receipts are generated beside it.
+
+## 0.3 changes
+
+- Removed the 0.2 Lunar roadmap placeholders. If a module appears in Forge's live UI, it has concrete 1.8.9 behavior.
+- Added functional Lunar-inspired Hypixel, Bed Wars, SkyBlock, Quickplay, scoreboard, PvP, team, minimap, hitbox, chunk/light overlay, WAILA, WorldEdit CUI, replay/rewind trail, item tracking, cooldown, combo, stopwatch, action-bar, inventory, F3, GUI-scale and other modules.
+- Kept Toggle Sprint intent across attack interruption and highlighted the enabled state in its HUD.
+- Rebuilt the title menu so artwork is only a smoothly filtered atmosphere layer; buttons, labels and wordmark are rendered natively at the current resolution instead of being baked into a scaled 800x450 bitmap.
+- Preserved the lower-allocation rendering/config path from 0.2.
+
+See [`docs/PERFORMANCE_AND_PARITY.md`](docs/PERFORMANCE_AND_PARITY.md) for exact scope notes.
 
 ## Build
-
-The GitHub workflow compiles the real Minecraft adapter, runs the dependency-free core/UI test suite, remaps the Forge JAR, validates required entries inside the JAR, and only then publishes it to `dist/`.
-
-Locally, with internet access:
 
 ```bash
 ./gradlew clean check remapJar
 ```
 
-The repository also contains `scripts/test.sh`, which can validate the dependency-free core and shared UI without downloading Minecraft/Forge dependencies. It does **not** replace a full Forge build.
+The workflow compiles the real Minecraft adapter, runs the core/UI suite on Java 8, remaps the Forge JAR and verifies required classes/resources before publishing.
 
 ## Alpha status
 
-A successful build proves that the source compiles against the targeted Forge/Minecraft APIs and produces a remapped mod JAR. It does not replace manual in-game QA. Before calling an alpha release stable, verify at minimum:
-
-- Right Shift opens and closes the overlay in a real 1.8.9 Forge client.
-- Every module can be toggled without crashing or corrupting vanilla settings.
-- HUD dragging/scaling behaves at multiple GUI scales and resolutions.
-- Profiles survive restart and malformed profile recovery works.
-- Visual overrides restore the player's original settings after disable, world changes and GUI transitions.
-- Multiplayer testing confirms the client remains client-side and does not send unintended commands or packets.
-- Performance modules are benchmarked rather than advertised from compile-time assumptions.
+A green build proves compilation, tests, remapping and packaging. It does **not** replace manual game QA. Before calling this stable, test the JAR in a real client across several GUI scales, exercise every module you intend to use, compare Hypixel responsiveness against vanilla/Lunar under the same network conditions, and benchmark frame pacing with identical video settings.
 
 ## Third-party work
 
-The Luna Mod Menu and Dawn / Feather Client were used only as visual/design references; their code and assets are not bundled. See [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) for the open-source attribution used by the implementation.
+Luna Mod Menu and Dawn / Feather Client were visual references only; their code/assets are not bundled. Lunar/Apollo's public MIT-licensed module catalog is used as reference metadata. OptiFine is not redistributed.
 
----
-
-_I wish you luck, Forge. I know you can do this._
-
-
-## OptiFine compatibility
-
-OptiFine is not bundled in this public repository because its official copyright terms prohibit public redistribution without advance written permission. Forge Client 0.2 detects and coexists with a user-installed Minecraft 1.8.9 OptiFine JAR.
-
-See `docs/PERFORMANCE_AND_PARITY.md` for the performance work and exactly what Lunar parity means in this alpha.
+See [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
