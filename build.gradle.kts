@@ -67,11 +67,15 @@ val remapJar by tasks.named<net.fabricmc.loom.task.RemapJarTask>("remapJar") {
 }
 tasks.assemble { dependsOn(remapJar) }
 
-// These are the same dependency-free tests as scripts/test.sh; this route ALSO compiles the real adapter.
+// Compile the real adapter, then test the core/UI on the actual target Java runtime.
 val coreTests by tasks.registering(JavaExec::class) {
     dependsOn(tasks.testClasses)
     classpath = sourceSets.test.get().runtimeClasspath
     mainClass.set("dev.forgeclient.tests.AllTests")
+    javaLauncher.set(javaToolchains.launcherFor {
+        languageVersion.set(JavaLanguageVersion.of(8))
+    })
+    enableAssertions = true
     args(layout.buildDirectory.file("reports/core-tests.json").get().asFile.absolutePath)
 }
 tasks.check { dependsOn(coreTests) }

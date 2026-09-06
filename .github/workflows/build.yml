@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: write
+  statuses: write
 
 concurrency:
   group: forge-client-${{ github.ref }}
@@ -22,19 +23,12 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v4
 
-      - name: Expand and commit authored source (first import only)
+      - name: Record source revision
         shell: bash
         run: |
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          if test -f build-support/source.part00; then
-            python3 scripts/import_source.py
-            git add src scripts docs
-            git add -u build-support
-            git commit -m 'feat: commit Forge Client source, UI, modules and tests [skip ci]'
-            git push origin "HEAD:${GITHUB_REF_NAME}"
-          fi
           echo "SOURCE_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
           echo "SOURCE_TREE=$(git rev-parse HEAD^{tree})" >> "$GITHUB_ENV"
 
@@ -56,7 +50,7 @@ jobs:
           gradle-version: '8.8'
           cache-read-only: false
 
-      - name: Compile, test and remap
+      - name: Compile, test on Java 8 and remap
         shell: bash
         run: |
           set -euo pipefail
@@ -76,9 +70,13 @@ jobs:
           python3 - <<'PY'
           import json, os, pathlib
           report = json.loads(pathlib.Path('dist/jar-verification.json').read_text())
+          tests = json.loads(pathlib.Path('dist/core-tests.json').read_text())
+          assert tests['groupsFailed'] == 0 and tests['groupsPassed'] == 40
+          assert tests['java'].startswith('1.8.'), 'Tests did not run on Java 8'
           receipt = dict(source_commit=os.environ['SOURCE_COMMIT'], source_tree=os.environ['SOURCE_TREE'],
                          workflow_run='https://github.com/' + os.environ['GITHUB_REPOSITORY'] + '/actions/runs/' + os.environ['GITHUB_RUN_ID'],
                          minecraft='1.8.9', forge='11.15.1.2318', java_major=report['java_major'],
+                         test_runtime=tests['java'], test_groups=tests['groupsPassed'], assertions=tests['assertions'],
                          jar_sha256=report['sha256'], jar_bytes=report['bytes'],
                          in_game_qa=False, performance_benchmarked=False)
           pathlib.Path('dist/build-info.json').write_text(json.dumps(receipt, indent=2) + '\n')
@@ -98,9 +96,23 @@ jobs:
         run: |
           set -euo pipefail
           git add dist
-          if git diff --cached --quiet; then exit 0; fi
-          git commit -m 'build: publish verified Forge Client 0.1.0-alpha jar [skip ci]'
-          git push origin "HEAD:${GITHUB_REF_NAME}"
+          if ! git diff --cached --quiet; then
+            git commit -m 'build: publish Java 8 verified Forge Client alpha [skip ci]'
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
+
+      - name: Link published artifact commit to successful verification
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # The publication commit changes only dist/, not the tested source.
+          gh api "repos/${GITHUB_REPOSITORY}/statuses/$(git rev-parse HEAD)" \
+            -f state=success \
+            -f context='Forge Client / verified JAR' \
+            -f description='Compile, Java 8 tests, remapping and JAR checks passed' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
 
       - name: Keep build diagnostics
         if: always()
