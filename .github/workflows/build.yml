@@ -23,29 +23,16 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v4
 
-      - name: Apply Forge Client 0.2 source and approved art
+      - name: Materialize 0.3 source wiring
         shell: bash
         run: |
           set -euo pipefail
+          python3 scripts/apply_v3.py
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          if test ! -f scripts/upgrade_v2.py; then
-            python3 - <<'PY'
-          import base64, gzip, pathlib
-          root=pathlib.Path('.')
-          parts=sorted((root/'build-support'/'upgrade-v2').glob('upgrade_v2.b64.part*'))
-          if not parts:
-              raise SystemExit('Missing staged Forge 0.2 upgrade payload')
-          raw=gzip.decompress(base64.b64decode(''.join(p.read_text(encoding='ascii') for p in parts)))
-          out=root/'scripts'/'upgrade_v2.py'; out.parent.mkdir(parents=True,exist_ok=True); out.write_bytes(raw)
-          PY
-          fi
-          python3 scripts/upgrade_v2.py
-          rm -rf build-support/upgrade-v2
-          git add -A
+          git add src build.gradle.kts
           if ! git diff --cached --quiet; then
-            git commit -m 'feat: Forge Client 0.2 performance, Lunar baseline and Dawn menu [skip ci]'
-            git push origin "HEAD:${GITHUB_REF_NAME}"
+            git commit -m 'feat: wire functional Lunar modules and Forge Client 0.3 [skip ci]'
           fi
           echo "SOURCE_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
           echo "SOURCE_TREE=$(git rev-parse HEAD^{tree})" >> "$GITHUB_ENV"
@@ -78,10 +65,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          source_jar='build/libs/forge-client-0.2.0-alpha.jar'
-          output_jar='dist/Forge-Client-1.8.9-0.2.0-alpha.jar'
+          source_jar='build/libs/forge-client-0.3.0-alpha.jar'
+          output_jar='dist/Forge-Client-1.8.9-0.3.0-alpha.jar'
           mkdir -p dist
-          rm -f dist/Forge-Client-1.8.9-0.1.0-alpha.jar dist/Forge-Client-1.8.9-0.1.0-alpha.jar.sha256
+          rm -f dist/Forge-Client-1.8.9-0.2.0-alpha.jar dist/Forge-Client-1.8.9-0.2.0-alpha.jar.sha256
           python3 scripts/verify_jar.py "$source_jar" > dist/jar-verification.json
           cp "$source_jar" "$output_jar"
           sha256sum "$output_jar" > "$output_jar.sha256"
@@ -90,14 +77,10 @@ jobs:
           import json, os, pathlib
           report=json.loads(pathlib.Path('dist/jar-verification.json').read_text())
           tests=json.loads(pathlib.Path('dist/core-tests.json').read_text())
-          assert tests['groupsFailed']==0 and tests['groupsPassed']==40
+          assert tests['groupsFailed']==0 and tests['groupsPassed']>=40
           assert tests['java'].startswith('1.8.'), 'Tests did not run on Java 8'
-          receipt=dict(source_commit=os.environ['SOURCE_COMMIT'],source_tree=os.environ['SOURCE_TREE'],
-              workflow_run='https://github.com/'+os.environ['GITHUB_REPOSITORY']+'/actions/runs/'+os.environ['GITHUB_RUN_ID'],
-              minecraft='1.8.9',forge='11.15.1.2318',version='0.2.0-alpha',java_major=report['java_major'],
-              test_runtime=tests['java'],test_groups=tests['groupsPassed'],assertions=tests['assertions'],
-              lunar_catalog_entries=98,jar_sha256=report['sha256'],jar_bytes=report['bytes'],
-              optifine_bundled=False,in_game_qa=False,performance_benchmarked=False)
+          assert report['live_modules']==89 and report['placeholder_modules']==0
+          receipt=dict(source_commit=os.environ['SOURCE_COMMIT'],source_tree=os.environ['SOURCE_TREE'],workflow_run='https://github.com/'+os.environ['GITHUB_REPOSITORY']+'/actions/runs/'+os.environ['GITHUB_RUN_ID'],minecraft='1.8.9',forge='11.15.1.2318',version='0.3.0-alpha',java_major=report['java_major'],test_runtime=tests['java'],test_groups=tests['groupsPassed'],assertions=tests['assertions'],live_modules=report['live_modules'],placeholder_modules=report['placeholder_modules'],jar_sha256=report['sha256'],jar_bytes=report['bytes'],optifine_bundled=False,in_game_qa=False,performance_benchmarked=False)
           pathlib.Path('dist/build-info.json').write_text(json.dumps(receipt,indent=2)+'\n')
           PY
           cat dist/jar-verification.json
@@ -105,32 +88,28 @@ jobs:
       - name: Upload compiled mod artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Forge-Client-1.8.9-0.2.0-alpha
+          name: Forge-Client-1.8.9-0.3.0-alpha
           path: dist/
           if-no-files-found: error
           retention-days: 30
 
-      - name: Publish JAR and verification receipts to feature branch
+      - name: Publish tested source and JAR to feature branch
         shell: bash
         run: |
           set -euo pipefail
           git add -A dist
           if ! git diff --cached --quiet; then
-            git commit -m 'build: publish Java 8 verified Forge Client 0.2 alpha [skip ci]'
-            git push origin "HEAD:${GITHUB_REF_NAME}"
+            git commit -m 'build: publish Java 8 verified Forge Client 0.3 alpha [skip ci]'
           fi
+          git push origin "HEAD:${GITHUB_REF_NAME}"
 
-      - name: Link published artifact commit to successful verification
+      - name: Link publication commit to successful verification
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          gh api "repos/${GITHUB_REPOSITORY}/statuses/$(git rev-parse HEAD)" \
-            -f state=success \
-            -f context='Forge Client / verified JAR' \
-            -f description='0.2 compile, Java 8 tests, remapping and JAR checks passed' \
-            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          gh api "repos/${GITHUB_REPOSITORY}/statuses/$(git rev-parse HEAD)" -f state=success -f context='Forge Client / verified JAR' -f description='0.3 compile, Java 8 tests, remap and JAR checks passed' -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
 
       - name: Keep build diagnostics
         if: always()
