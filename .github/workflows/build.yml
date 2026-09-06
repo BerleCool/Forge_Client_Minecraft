@@ -3,73 +3,112 @@ name: Build Forge Client 1.8.9
 on:
   workflow_dispatch:
   push:
-    branches:
-      - feat/forge-client-foundation
-    paths-ignore:
-      - 'dist/**'
+    branches: [feat/forge-client-foundation]
+    paths-ignore: ['dist/**']
 
 permissions:
   contents: write
+
+concurrency:
+  group: forge-client-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
     name: Compile, test and remap JAR
     runs-on: ubuntu-latest
     timeout-minutes: 20
-
     steps:
       - name: Check out source
         uses: actions/checkout@v4
 
-      - name: Set up Java 8
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '8'
-
-      - name: Set up Gradle 8.8
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.8'
-
-      - name: Compile, test and remap
-        run: gradle --no-daemon clean check remapJar --stacktrace
-
-      - name: Verify and stage distributable
-        shell: bash
-        run: |
-          set -euo pipefail
-          source_jar="build/libs/forge-client-0.1.0-alpha.jar"
-          output_jar="dist/Forge-Client-1.8.9-0.1.0-alpha.jar"
-          test -f "$source_jar"
-          mkdir -p dist
-          cp "$source_jar" "$output_jar"
-          jar tf "$output_jar" | grep -q '^dev/forgeclient/minecraft/ForgeClient.class$'
-          jar tf "$output_jar" | grep -q '^mcmod.info$'
-          sha256sum "$output_jar" > "$output_jar.sha256"
-          echo "Built $(du -h "$output_jar" | cut -f1) distributable"
-          cat "$output_jar.sha256"
-
-      - name: Upload Actions artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: Forge-Client-1.8.9-0.1.0-alpha
-          path: |
-            dist/Forge-Client-1.8.9-0.1.0-alpha.jar
-            dist/Forge-Client-1.8.9-0.1.0-alpha.jar.sha256
-          if-no-files-found: error
-          retention-days: 30
-
-      - name: Publish JAR to repository branch
+      - name: Expand and commit authored source (first import only)
         shell: bash
         run: |
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add dist/Forge-Client-1.8.9-0.1.0-alpha.jar dist/Forge-Client-1.8.9-0.1.0-alpha.jar.sha256
-          if git diff --cached --quiet; then
-            echo 'Distributable is already current.'
-            exit 0
+          if test -f build-support/source.part00; then
+            python3 scripts/import_source.py
+            git add src scripts docs
+            git add -u build-support
+            git commit -m 'feat: commit Forge Client source, UI, modules and tests [skip ci]'
+            git push origin "HEAD:${GITHUB_REF_NAME}"
           fi
-          git commit -m 'build: publish Forge Client 0.1.0-alpha jar [skip ci]'
+          echo "SOURCE_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          echo "SOURCE_TREE=$(git rev-parse HEAD^{tree})" >> "$GITHUB_ENV"
+
+      - name: Install Java 8 compiler/runtime
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+
+      - name: Install Java 17 for Gradle
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle 8.8
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.8'
+          cache-read-only: false
+
+      - name: Compile, test and remap
+        shell: bash
+        run: |
+          set -euo pipefail
+          gradle --no-daemon clean check remapJar --stacktrace 2>&1 | tee build.log
+
+      - name: Verify and stage distributable
+        shell: bash
+        run: |
+          set -euo pipefail
+          source_jar='build/libs/forge-client-0.1.0-alpha.jar'
+          output_jar='dist/Forge-Client-1.8.9-0.1.0-alpha.jar'
+          mkdir -p dist
+          python3 scripts/verify_jar.py "$source_jar" > dist/jar-verification.json
+          cp "$source_jar" "$output_jar"
+          sha256sum "$output_jar" > "$output_jar.sha256"
+          cp build/reports/core-tests.json dist/core-tests.json
+          python3 - <<'PY'
+          import json, os, pathlib
+          report = json.loads(pathlib.Path('dist/jar-verification.json').read_text())
+          receipt = dict(source_commit=os.environ['SOURCE_COMMIT'], source_tree=os.environ['SOURCE_TREE'],
+                         workflow_run='https://github.com/' + os.environ['GITHUB_REPOSITORY'] + '/actions/runs/' + os.environ['GITHUB_RUN_ID'],
+                         minecraft='1.8.9', forge='11.15.1.2318', java_major=report['java_major'],
+                         jar_sha256=report['sha256'], jar_bytes=report['bytes'],
+                         in_game_qa=False, performance_benchmarked=False)
+          pathlib.Path('dist/build-info.json').write_text(json.dumps(receipt, indent=2) + '\n')
+          PY
+          cat dist/jar-verification.json
+
+      - name: Upload compiled mod artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Forge-Client-1.8.9-0.1.0-alpha
+          path: dist/
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish JAR and verification receipts to feature branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add dist
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'build: publish verified Forge Client 0.1.0-alpha jar [skip ci]'
           git push origin "HEAD:${GITHUB_REF_NAME}"
+
+      - name: Keep build diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: forge-build-diagnostics-${{ github.run_id }}
+          path: |
+            build.log
+            build/reports/
+          if-no-files-found: ignore
+          retention-days: 7
