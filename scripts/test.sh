@@ -1,13 +1,10 @@
 #!/bin/sh
-# Offline core + shared UI tests. Deliberately does NOT compile the Minecraft adapter.
+# This test route does not compile Minecraft-specific adapters.
 set -eu
-ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-cd "$ROOT"
+cd "$(dirname "$0")/.."
 mkdir -p build/verification/classes build/reports
 find src/main/java/dev/forgeclient/core src/main/java/dev/forgeclient/ui src/test/java -name '*.java' | sort > build/verification/sources.txt
-# Quote paths in the argument file for checkout paths containing spaces (relative paths here are stable).
-VERSION=$(javac -version 2>&1)
-case "$VERSION" in
+case "$(javac -version 2>&1)" in
     *' 1.8.'*) javac -encoding UTF-8 -source 8 -target 8 -d build/verification/classes @build/verification/sources.txt ;;
     *) javac -encoding UTF-8 --release 8 -d build/verification/classes @build/verification/sources.txt ;;
 esac

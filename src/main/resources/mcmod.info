@@ -2,12 +2,14 @@
   {
     "modid": "forgeclient",
     "name": "Forge Client",
-    "description": "A charcoal-and-orange client-side HUD and utility mod for Minecraft 1.8.9. Independent of Minecraft Forge, Dawn and Luna. Alpha: consult the manual verification checklist.",
+    "description": "Client-side HUD, visual, utility and performance modules. Development alpha; manual game QA still required. Independent of Minecraft Forge.",
     "version": "${version}",
     "mcversion": "1.8.9",
     "url": "https://github.com/BerleCool/Forge_Client_Minecraft",
-    "authorList": ["Forge Client / The Gideon Project"],
-    "credits": "CPS window inspired by MIT-licensed BasicHUD; see bundled third-party notices.",
+    "authorList": [
+      "Forge Client / The Gideon Project"
+    ],
+    "credits": "CPS approach informed by BasicHUD (MIT); see bundled notices.",
     "dependencies": []
   }
 ]
