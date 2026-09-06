@@ -27,15 +27,16 @@ public final class AllTests {
     private static Properties values(String value){Properties p=new Properties();p.setProperty("schema","1");p.setProperty("test",value);return p;}
     public static void main(String[] args)throws Exception {
         long started=System.nanoTime();
-        test("43 modules, unique ids, category sizes and conservative defaults",()->{
-            ModuleRegistry r=ModuleCatalog.create();eq(43,r.all().size());eq(8,r.enabledCount());
-            Set<String> ids=new HashSet<>();int[] categories=new int[4];
+        test("Lunar catalog parity, unique ids and conservative defaults",()->{
+            ModuleRegistry r=ModuleCatalog.create();eq(98,LunarParity.REQUIRED_NAMES.length);eq(8,r.enabledCount());
+            Set<String> ids=new HashSet<>();
             for(ClientModule m:r.all()){
-                ok(ids.add(m.id),"duplicate module");categories[m.category.ordinal()]++;
+                ok(ids.add(m.id),"duplicate module");
                 Set<String> settings=new HashSet<>();for(Setting s:m.settings()){ok(settings.add(s.id),"duplicate setting");ok(s.set(s.raw()),"default must validate");}
                 if(m.hud){eq(Setting.Kind.NUMBER,m.setting("scale").kind);ok(m.placement.x()>=0&&m.placement.x()<=1,"normalized x");}
             }
-            eq(23,categories[0]);eq(10,categories[1]);eq(6,categories[2]);eq(4,categories[3]);
+            for(String name:LunarParity.REQUIRED_NAMES)ok(LunarParity.covers(r,name),"missing Lunar parity entry: "+name);
+            ok(r.all().size()>=98,"catalog must include the full Lunar baseline plus Forge extras");ok(LunarParity.unavailableCount(r)>0,"unfinished parity entries stay visibly non-toggleable rather than faking behavior");
             ok(!r.enabled("fullbright")&&!r.enabled("no_fire")&&!r.enabled("distance_culling")&&!r.enabled("toggle_sprint"),"sensitive modules start off");
             throwsType(IllegalArgumentException.class,()->r.add(r.get("fps")));
         });

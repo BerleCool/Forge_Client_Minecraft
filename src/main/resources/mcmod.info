@@ -6,6 +6,7 @@
     "version": "${version}",
     "mcversion": "1.8.9",
     "url": "https://github.com/BerleCool/Forge_Client_Minecraft",
+    "logoFile": "assets/forgeclient/textures/gui/logo.jpg",
     "authorList": [
       "Forge Client / The Gideon Project"
     ],

@@ -25,7 +25,7 @@ import java.util.Deque;
 public final class NativeCanvas implements Canvas {
     private static final ResourceLocation STONE=new ResourceLocation("forgeclient","textures/gui/stone.png");
     private final Minecraft mc;
-    private final Deque<double[]> transforms=new ArrayDeque<>();
+    private final double[] stackX=new double[128],stackY=new double[128],stackScale=new double[128];private int transformDepth;
     private final Deque<Rect> clips=new ArrayDeque<>();
     private final FloatBuffer color=BufferUtils.createFloatBuffer(16);
     private final IntBuffer integers=BufferUtils.createIntBuffer(16);
@@ -38,7 +38,7 @@ public final class NativeCanvas implements Canvas {
     public NativeCanvas(Minecraft mc){this.mc=mc;}
     public void begin(double scale){
         if(began)throw new IllegalStateException("Canvas already active");
-        began=true;transforms.clear();clips.clear();offsetX=offsetY=0;localScale=1;
+        began=true;transformDepth=0;clips.clear();offsetX=offsetY=0;localScale=1;
         physicalScale=new ScaledResolution(mc).getScaleFactor()*scale;
         blend=GL11.glIsEnabled(GL11.GL_BLEND);depth=GL11.glIsEnabled(GL11.GL_DEPTH_TEST);alpha=GL11.glIsEnabled(GL11.GL_ALPHA_TEST);
         texture=GL11.glIsEnabled(GL11.GL_TEXTURE_2D);lighting=GL11.glIsEnabled(GL11.GL_LIGHTING);cull=GL11.glIsEnabled(GL11.GL_CULL_FACE);
@@ -59,7 +59,7 @@ public final class NativeCanvas implements Canvas {
     public void end(){
         if(!began)return;
         try{
-            while(!transforms.isEmpty())pop();
+            while(transformDepth>0)pop();
             clips.clear();GL11.glScissor(originalScissor.x,originalScissor.y,originalScissor.width,originalScissor.height);
             if(scissorEnabled)GL11.glEnable(GL11.GL_SCISSOR_TEST);else GL11.glDisable(GL11.GL_SCISSOR_TEST);
             GlStateManager.popMatrix();GlStateManager.matrixMode(matrixMode);
@@ -81,10 +81,10 @@ public final class NativeCanvas implements Canvas {
     public void text(String text,int x,int y,int color,boolean shadow){if(text!=null&&!text.isEmpty())mc.fontRendererObj.drawString(text,x,y,color,shadow);}
     public int textWidth(String text){return text==null?0:mc.fontRendererObj.getStringWidth(text);}
     public void push(double x,double y,double scale){
-        transforms.push(new double[]{offsetX,offsetY,localScale});offsetX+=x*localScale;offsetY+=y*localScale;localScale*=scale;
-        GlStateManager.pushMatrix();GlStateManager.translate(x,y,0);GlStateManager.scale(scale,scale,1);
+        if(transformDepth>=stackX.length)throw new IllegalStateException("Canvas transform stack overflow");stackX[transformDepth]=offsetX;stackY[transformDepth]=offsetY;stackScale[transformDepth]=localScale;transformDepth++;
+        offsetX+=x*localScale;offsetY+=y*localScale;localScale*=scale;GlStateManager.pushMatrix();GlStateManager.translate(x,y,0);GlStateManager.scale(scale,scale,1);
     }
-    public void pop(){if(transforms.isEmpty())throw new IllegalStateException("Unbalanced canvas transform");double[] v=transforms.pop();offsetX=v[0];offsetY=v[1];localScale=v[2];GlStateManager.popMatrix();}
+    public void pop(){if(transformDepth<=0)throw new IllegalStateException("Unbalanced canvas transform");transformDepth--;offsetX=stackX[transformDepth];offsetY=stackY[transformDepth];localScale=stackScale[transformDepth];GlStateManager.popMatrix();}
     public void clip(Rect bounds){
         int x=(int)Math.floor((offsetX+bounds.x*localScale)*physicalScale);
         int right=(int)Math.ceil((offsetX+bounds.right()*localScale)*physicalScale);

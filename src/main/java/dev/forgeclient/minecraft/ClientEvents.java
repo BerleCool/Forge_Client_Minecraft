@@ -44,7 +44,7 @@ public final class ClientEvents {
     private final ChatDeduplicator chat=new ChatDeduplicator();
     private final FloatBuffer outlineColor=BufferUtils.createFloatBuffer(16);
     private final DateTimeFormatter minutes=DateTimeFormatter.ofPattern("HH:mm"),seconds=DateTimeFormatter.ofPattern("HH:mm:ss");
-    private boolean sprintIntent,ownsSprint;
+    private boolean sprintIntent,ownsSprint;private int sprintResumeTicks;
     public ClientEvents(ForgeClient client){this.client=client;overrides=new VisualOverrides(mc,client.modules);canvas=new NativeCanvas(mc);}
     private boolean enabled(String id){return client.modules.enabled(id);}
     private boolean play(){return mc.theWorld!=null&&mc.thePlayer!=null&&mc.currentScreen==null;}
@@ -70,14 +70,15 @@ public final class ClientEvents {
         if(enabled("toggle_sprint")&&event.button>=0&&event.button-100==mc.gameSettings.keyBindSprint.getKeyCode())sprintIntent=!sprintIntent;
     }
     private void sprint() {
-        if(!play()||!Display.isActive()||!enabled("toggle_sprint"))sprintIntent=false;
-        if(mc.thePlayer==null){ownsSprint=false;return;}
-        boolean allowed=ClientPolicies.maySprint(Display.isActive(),mc.currentScreen!=null,mc.theWorld!=null,
-            mc.thePlayer.movementInput.moveForward,mc.thePlayer.isSneaking(),mc.thePlayer.isUsingItem(),
-            mc.thePlayer.isCollidedHorizontally,mc.thePlayer.isPotionActive(Potion.blindness),
-            mc.thePlayer.getFoodStats().getFoodLevel(),mc.thePlayer.capabilities.allowFlying);
-        if(sprintIntent&&allowed){if(!mc.thePlayer.isSprinting()){mc.thePlayer.setSprinting(true);ownsSprint=true;}}
-        else if(ownsSprint){if(!mc.gameSettings.keyBindSprint.isKeyDown())mc.thePlayer.setSprinting(false);ownsSprint=false;}
+        boolean module=enabled("toggle_sprint");client.telemetry.toggleSprintEnabled=module;
+        if(!module){sprintIntent=false;sprintResumeTicks=0;if(mc.thePlayer!=null&&ownsSprint&&!mc.gameSettings.keyBindSprint.isKeyDown())mc.thePlayer.setSprinting(false);ownsSprint=false;client.telemetry.sprintToggled=false;return;}
+        if(mc.theWorld==null||mc.thePlayer==null){sprintIntent=false;sprintResumeTicks=0;ownsSprint=false;client.telemetry.sprintToggled=false;return;}
+        client.telemetry.sprintToggled=sprintIntent;
+        if(!Display.isActive()||mc.currentScreen!=null){if(ownsSprint&&!mc.gameSettings.keyBindSprint.isKeyDown())mc.thePlayer.setSprinting(false);ownsSprint=false;return;}
+        boolean allowed=ClientPolicies.maySprint(true,false,true,mc.thePlayer.movementInput.moveForward,mc.thePlayer.isSneaking(),mc.thePlayer.isUsingItem(),mc.thePlayer.isCollidedHorizontally,mc.thePlayer.isPotionActive(Potion.blindness),mc.thePlayer.getFoodStats().getFoodLevel(),mc.thePlayer.capabilities.allowFlying);
+        if(sprintResumeTicks>0)sprintResumeTicks--;
+        if(sprintIntent&&allowed){if(!mc.thePlayer.isSprinting())mc.thePlayer.setSprinting(true);ownsSprint=true;}
+        else if(!sprintIntent&&ownsSprint){if(!mc.gameSettings.keyBindSprint.isKeyDown())mc.thePlayer.setSprinting(false);ownsSprint=false;}
     }
     @SubscribeEvent public void fov(FOVUpdateEvent event) {
         if(event.entity!=mc.thePlayer)return;
@@ -85,8 +86,9 @@ public final class ClientEvents {
         if(overrides.zooming())event.newfov/=overrides.zoomFactor();
     }
     @SubscribeEvent public void gui(GuiOpenEvent event) {
+        if(event.gui!=null&&event.gui.getClass()==net.minecraft.client.gui.GuiMainMenu.class){event.gui=new ForgeMainMenu();return;}
         // Release before a vanilla/mod settings screen has a chance to save GameSettings.
-        if(event.gui!=null&&!(event.gui instanceof ForgeScreen))overrides.releaseAll();
+        if(event.gui!=null&&!(event.gui instanceof ForgeScreen)&&!(event.gui instanceof ForgeMainMenu))overrides.releaseAll();
     }
     @SubscribeEvent public void frame(TickEvent.RenderTickEvent event) {
         if(event.phase!=TickEvent.Phase.END)return;
@@ -122,7 +124,7 @@ public final class ClientEvents {
             if(m.setting("dot").bool())canvas.rect(x-offset,y-offset,thick,thick,color);
         } finally{canvas.end();}
     }
-    @SubscribeEvent public void overlayPost(RenderGameOverlayEvent.Post event) {
+    @SubscribeEvent(priority=EventPriority.LOWEST) public void overlayPost(RenderGameOverlayEvent.Post event) {
         if(event.type!=RenderGameOverlayEvent.ElementType.ALL||!hudVisible())return;
         int width=event.resolution.getScaledWidth(),height=event.resolution.getScaledHeight();
         double scale=UiLayout.scaleFor(width,height);canvas.begin(scale);
@@ -138,7 +140,7 @@ public final class ClientEvents {
         double distance=client.modules.get("distance_culling").setting("distance").number();
         if(event.entity.getDistanceSqToEntity(mc.thePlayer)>distance*distance)event.setCanceled(true);
     }
-    @SubscribeEvent public void attack(AttackEntityEvent event){if(event.entityPlayer==mc.thePlayer)client.sampler.attack(event.target);}
+    @SubscribeEvent public void attack(AttackEntityEvent event){if(event.entityPlayer==mc.thePlayer){client.sampler.attack(event.target);if(enabled("toggle_sprint")&&sprintIntent)sprintResumeTicks=3;}}
     @SubscribeEvent(priority=EventPriority.LOW) public void chat(ClientChatReceivedEvent event) {
         if(event.type==2||event.message==null)return; // Action bar must remain untouched.
         String original=event.message.getUnformattedText();

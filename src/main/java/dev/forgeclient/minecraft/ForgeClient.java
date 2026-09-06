@@ -24,7 +24,7 @@ import java.util.Properties;
         acceptedMinecraftVersions="[1.8.9]",clientSideOnly=true,acceptableRemoteVersions="*",
         guiFactory="dev.forgeclient.minecraft.ForgeGuiFactory")
 public final class ForgeClient {
-    public static final String MOD_ID="forgeclient",VERSION="0.1.0-alpha";
+    public static final String MOD_ID="forgeclient",VERSION="0.2.0-alpha";
     @Mod.Instance(MOD_ID) private static ForgeClient INSTANCE;
     public static ForgeClient instance(){if(INSTANCE==null)throw new IllegalStateException("Forge Client is not initialized");return INSTANCE;}
     public final ModuleRegistry modules=ModuleCatalog.create();
@@ -37,7 +37,7 @@ public final class ForgeClient {
     private SaveQueue saves;
     private String active="default";
     private List<String> names=Collections.singletonList("default");
-    private long savedRevision;
+    private long savedRevision;private int savePoll;
     private volatile String saveError;
     private boolean openRequested;
 
@@ -84,10 +84,11 @@ public final class ForgeClient {
         sampler=new TelemetrySampler(this);ClientRegistry.registerKeyBinding(openKey);
         MinecraftForge.EVENT_BUS.register(new ClientEvents(this));
         ClientCommandHandler.instance.registerCommand(new ForgeCommand(this));
-        log.info("Forge Client {} initialized with {} modules. No telemetry or remote services.",VERSION,modules.all().size());
+        log.info("Forge Client {} initialized with {} module entries ({} currently native). No telemetry or remote services.",VERSION,modules.all().size(),modules.availableCount());
+        log.info("OptiFine {}. Forge Client never redistributes OptiFine; a user-installed copy is detected and left compatible.",OptiFineCompatibility.present()?"detected":"not detected");
     }
     public void snapshotIfChanged() {
-        if(modules.revision()!=savedRevision)snapshot();
+        if(++savePoll>=5){savePoll=0;if(modules.revision()!=savedRevision)snapshot();}
         if(saveError!=null){String error=saveError;saveError=null;message(error);}
         if(openRequested&&Minecraft.getMinecraft().currentScreen==null){openRequested=false;Minecraft.getMinecraft().displayGuiScreen(new ForgeScreen(null));}
     }

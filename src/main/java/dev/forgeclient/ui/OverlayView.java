@@ -231,12 +231,13 @@ public final class OverlayView {
         if(r.bottom()<moduleViewport.y||r.y>moduleViewport.bottom())return;
         boolean active=selection.equals(m.id),hover=r.contains(mouseX,mouseY);
         Theme.panel(c,r.x,r.y,r.width,r.height,active?0xF3302722:(hover?0xE32D282E:0xCE211E25),active);
-        hit("module:"+m.id,r,()->select(m),m::toggle);
+        hit("module:"+m.id,r,()->select(m),m.available()?m::toggle:null);
         c.rect(r.x+9,r.y+11,3,3,m.enabled()?Theme.ORANGE:Theme.DIM);
         c.text(Theme.truncate(c,m.name,r.width-63),r.x+18,r.y+9,active?Theme.GOLD:Theme.TEXT,false);
         c.text(Theme.truncate(c,m.summary,r.width-18),r.x+9,r.y+27,Theme.MUTED,false);
         Rect toggle=new Rect(r.right()-34,r.y+7,27,14);
-        Theme.toggle(c,toggle.x,toggle.y,m.enabled(),toggle.contains(mouseX,mouseY));hit("toggle:"+m.id,toggle,m::toggle,null);
+        if(m.available()){Theme.toggle(c,toggle.x,toggle.y,m.enabled(),toggle.contains(mouseX,mouseY));hit("toggle:"+m.id,toggle,m::toggle,null);}
+        else{c.rect(toggle.x,toggle.y,toggle.width,toggle.height,0xFF211D23);c.text("PORT",toggle.x+3,toggle.y+3,Theme.DIM,false);}
         if(m.favorite())c.text("*",r.right()-13,r.y+29,Theme.GOLD,false);
     }
     private void select(ClientModule m) { selection=m.id;inspectorScroll=0;binding=null;searchFocused=false;focus=""; }
@@ -253,8 +254,9 @@ public final class OverlayView {
         int descLines=Math.min(4,Theme.wrap(c,m.description,w).size());
         Theme.wrapped(c,m.description,x,y,w,Theme.MUTED,4);y+=descLines*12+12;
         Theme.panel(c,x,y,w,29,0xFF242128,false);
-        c.text(m.enabled()?"ENABLED":"DISABLED",x+9,y+10,m.enabled()?Theme.GOLD:Theme.MUTED,false);
-        Theme.toggle(c,x+w-35,y+7,m.enabled(),false);hit("inspector-toggle",new Rect(x,y,w,29),m::toggle,null);y+=38;
+        c.text(!m.available()?"PORTING":(m.enabled()?"ENABLED":"DISABLED"),x+9,y+10,m.enabled()?Theme.GOLD:Theme.MUTED,false);
+        if(m.available()){Theme.toggle(c,x+w-35,y+7,m.enabled(),false);hit("inspector-toggle",new Rect(x,y,w,29),m::toggle,null);}
+        else c.text("COMING SOON",x+w-83,y+10,Theme.DIM,false);y+=38;
         button(c,"favorite",new Rect(x,y,52,22),m.favorite()?"* PIN":"PIN",m.favorite(),()->m.favorite(!m.favorite()));
         String bindLabel=binding==m?"PRESS KEY":(m.holdBinding?"HOLD ":"KEY ")+host.keyName(m.key());
         button(c,"bind",new Rect(x+58,y,w-58,22),bindLabel,binding==m,()->{binding=m;searchFocused=false;focus="";});y+=32;

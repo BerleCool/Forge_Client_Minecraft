@@ -1,6 +1,6 @@
 # Forge Client
 
-Forge Client is a client-side Minecraft 1.8.9 mod for **Minecraft Forge 11.15.1.2318**. The current alpha combines a full-screen, Right-Shift module interface with HUD, visual, utility and performance modules in a dark Minecraft-inspired orange theme.
+Forge Client is a client-side Minecraft 1.8.9 mod for **Minecraft Forge 11.15.1.2318**. The 0.2 alpha combines a full-screen, Right-Shift module interface with a Lunar-derived module catalog baseline, a Dawn-inspired custom title screen, local HUD/visual utilities, and a lower-allocation gameplay path in a dark Minecraft-inspired orange theme.
 
 > Forge Client is our product name and is independent of the Minecraft Forge project.
 
@@ -9,13 +9,13 @@ Forge Client is a client-side Minecraft 1.8.9 mod for **Minecraft Forge 11.15.1.
 - Minecraft: **1.8.9 only**
 - Loader: **Minecraft Forge 1.8.9**
 - Open client: **Right Shift**
-- Modules: **43** HUD / visual / performance / utility modules
+- Catalog: **current 98-module Lunar Apollo baseline** plus Forge-specific extras; only entries with real 1.8.9 handlers are toggleable
 - Configuration: local profiles and persistent HUD placement
 - Networking: no Forge Client telemetry or remote service
 
 The compiled development alpha is published by GitHub Actions to:
 
-`dist/Forge-Client-1.8.9-0.1.0-alpha.jar`
+`dist/Forge-Client-1.8.9-0.2.0-alpha.jar`
 
 A matching `.sha256` file is generated beside it. The same files are also retained as a GitHub Actions artifact for each successful build.
 
@@ -50,3 +50,10 @@ The Luna Mod Menu and Dawn / Feather Client were used only as visual/design refe
 ---
 
 _I wish you luck, Forge. I know you can do this._
+
+
+## OptiFine compatibility
+
+OptiFine is not bundled in this public repository because its official copyright terms prohibit public redistribution without advance written permission. Forge Client 0.2 detects and coexists with a user-installed Minecraft 1.8.9 OptiFine JAR.
+
+See `docs/PERFORMANCE_AND_PARITY.md` for the performance work and exactly what Lunar parity means in this alpha.

@@ -50,7 +50,7 @@ public final class TelemetrySampler {
     }
     private boolean enabled(String id){return modules.enabled(id);}
     private void sample(long now){
-        EntityPlayer p=mc.thePlayer;data.player=mc.getSession().getUsername();data.server=mc.isSingleplayer()?"Singleplayer":(mc.getCurrentServerData()==null?"Multiplayer":mc.getCurrentServerData().serverName);
+        EntityPlayer p=mc.thePlayer;data.player=mc.getSession().getUsername();data.server=mc.isSingleplayer()?"Singleplayer":(mc.getCurrentServerData()==null?"Multiplayer":mc.getCurrentServerData().serverIP);
         NetworkPlayerInfo info=mc.getNetHandler()==null?null:mc.getNetHandler().getPlayerInfo(p.getUniqueID());data.ping=info==null?0:Math.max(0,info.getResponseTime());
         if(enabled("fps"))data.put("fps",data.fps+" FPS");
         if(enabled("ping"))data.put("ping",mc.isSingleplayer()?"LOCAL SESSION":(info==null?"PING --":data.ping+" ms"));
@@ -72,7 +72,7 @@ public final class TelemetrySampler {
         if(enabled("hit_distance"))data.put("hit_distance",attackAt!=0&&now-attackAt<modules.get("hit_distance").setting("timeout").number()*1_000_000_000L?"LOCAL HIT "+fmt("%.2f",lastDistance)+" m":"LOCAL HIT --");
         if(enabled("inventory_counts")){int arrows=0,pearls=0,blocks=0;for(ItemStack stack:p.inventory.mainInventory)if(stack!=null){if(stack.getItem()==Items.arrow)arrows+=stack.stackSize;if(stack.getItem()==Items.ender_pearl)pearls+=stack.stackSize;if(stack.getItem() instanceof ItemBlock)blocks+=stack.stackSize;}data.put("inventory_counts","ARROWS "+arrows+" / PEARLS "+pearls,"BLOCKS "+blocks);}
         if(enabled("pack_info")){if(ticks%40<5){List<String> names=new ArrayList<>();for(ResourcePackRepository.Entry entry:mc.getResourcePackRepository().getRepositoryEntries())names.add(entry.getResourcePackName());packs=names.isEmpty()?"Default":String.join(", ",names);}data.put("pack_info",packs.length()>80?packs.substring(0,77)+"...":packs);}
-        if(enabled("sprint_status"))data.put("sprint_status",p.isSprinting()?"SPRINTING":"WALKING");
+        if(enabled("sprint_status")){boolean module=modules.enabled("toggle_sprint");data.put("sprint_status",module?"TOGGLE SPRINT  ENABLED":"TOGGLE SPRINT  DISABLED",module?(data.sprintToggled?"LOCKED ON":"READY"):(p.isSprinting()?"SPRINTING":"WALKING"));}
         if(enabled("waypoint")){Waypoint point=client.waypoints.nearest(worldKey,p.dimension,p.posX,p.posY,p.posZ);if(point==null)data.put("waypoint","NO WAYPOINT / /forgeclient waypoint");else{double bearing=Math.toDegrees(Math.atan2(-(point.x-p.posX),point.z-p.posZ));double relative=((bearing-yaw+540)%360)-180;data.put("waypoint",point.name+" / "+fmt("%.0f",point.distance(p.posX,p.posY,p.posZ))+" m",Math.abs(relative)<12?"AHEAD":relative<0?"LEFT "+fmt("%.0f",-relative)+" deg":"RIGHT "+fmt("%.0f",relative)+" deg");}}
         if(enabled("frame_graph"))data.put("frame_graph","AVG "+fmt("%.1f",data.frames.mean())+" / P99 "+fmt("%.1f",data.frames.percentile(.99))+" ms");
     }

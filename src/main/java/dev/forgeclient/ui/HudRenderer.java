@@ -19,28 +19,30 @@ public final class HudRenderer {
         if(m.id.equals("frame_graph"))return new Size(Math.max(180,Math.min(260,width)),68);
         return new Size(Math.min(280,width),Math.max(1,lines.length)*12+10);
     }
-    private double scale(Canvas c,ClientModule m,Telemetry t,int w,int h){
-        Size size=measure(c,m,t);return Math.min(m.setting("scale").number(),Math.min(w/(double)Math.max(1,size.width),h/(double)Math.max(1,size.height)));
-    }
+    private double scale(Size size,ClientModule m,int w,int h){return Math.min(m.setting("scale").number(),Math.min(w/(double)Math.max(1,size.width),h/(double)Math.max(1,size.height)));}
     public Rect bounds(Canvas c,ClientModule m,Telemetry t,int width,int height){
-        Size size=measure(c,m,t);double scale=scale(c,m,t,width,height);
+        Size size=measure(c,m,t);double scale=scale(size,m,width,height);
         int w=Math.min(width,(int)Math.ceil(size.width*scale)),h=Math.min(height,(int)Math.ceil(size.height*scale));
         return new Rect(m.placement.pixelX(width,w),m.placement.pixelY(height,h),w,h);
     }
     public void render(Canvas c,ModuleRegistry registry,Telemetry t,int width,int height){
-        for(ClientModule m:registry.all())if(m.hud&&m.enabled()&&!hidden(registry,m)){
-            Rect r=bounds(c,m,t,width,height);drawAt(c,m,t,r.x,r.y,scale(c,m,t,width,height));
+        for(ClientModule m:registry.hud())if(m.enabled()&&!hidden(registry,m)){
+            Size size=measure(c,m,t);double scale=scale(size,m,width,height);
+            int w=Math.min(width,(int)Math.ceil(size.width*scale)),h=Math.min(height,(int)Math.ceil(size.height*scale));
+            Rect r=new Rect(m.placement.pixelX(width,w),m.placement.pixelY(height,h),w,h);drawMeasured(c,m,t,r.x,r.y,scale,size);
         }
     }
-    public void drawAt(Canvas c,ClientModule m,Telemetry t,int x,int y,double scale){
-        Size size=measure(c,m,t);boolean shadow=m.setting("shadow").bool();
+    public void drawAt(Canvas c,ClientModule m,Telemetry t,int x,int y,double scale){drawMeasured(c,m,t,x,y,scale,measure(c,m,t));}
+    private void drawMeasured(Canvas c,ClientModule m,Telemetry t,int x,int y,double scale,Size size){
+        boolean shadow=m.setting("shadow").bool();
         c.push(x,y,scale);
         try{
+            boolean sprintHighlight=m.id.equals("sprint_status")&&t.toggleSprintEnabled;
             if(m.setting("background").bool()){
                 int alpha=(int)Math.round(m.setting("opacity").number()*255/100);
-                c.rect(0,0,size.width,size.height,(alpha<<24)|0x17131A);
+                c.rect(0,0,size.width,size.height,(alpha<<24)|(sprintHighlight?0x2A1A10:0x17131A));
             }
-            if(m.setting("accent").bool())c.rect(0,0,2,size.height,Theme.ORANGE);
+            if(m.setting("accent").bool())c.rect(0,0,sprintHighlight?3:2,size.height,sprintHighlight?Theme.GOLD:Theme.ORANGE);
             if(m.id.equals("keystrokes")){keys(c,m,t);return;}
             if(m.id.equals("armor")||m.id.equals("held_item")){
                 Telemetry.Item[] items=m.id.equals("armor")?t.armor:t.held;
@@ -56,7 +58,7 @@ public final class HudRenderer {
             }
             String[] lines=t.rows(m.id);
             if(lines.length==0)c.text(m.name.toUpperCase(java.util.Locale.ROOT)+" --",8,6,Theme.MUTED,shadow);
-            for(int i=0;i<lines.length;i++)c.text(Theme.truncate(c,lines[i],size.width-16),8,6+i*12,Theme.TEXT,shadow);
+            for(int i=0;i<lines.length;i++)c.text(Theme.truncate(c,lines[i],size.width-16),8,6+i*12,(m.id.equals("sprint_status")&&t.toggleSprintEnabled&&i==0)?Theme.GOLD:Theme.TEXT,shadow);
             if(m.id.equals("frame_graph")){
                 int n=t.frames.size(),available=size.width-16;
                 for(int i=0;i<n;i++){

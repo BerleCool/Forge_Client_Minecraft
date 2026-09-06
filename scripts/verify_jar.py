@@ -13,12 +13,17 @@ with zipfile.ZipFile(jar) as archive:
     required = {
         'dev/forgeclient/minecraft/ForgeClient.class',
         'dev/forgeclient/minecraft/ForgeScreen.class',
+        'dev/forgeclient/minecraft/ForgeMainMenu.class',
+        'dev/forgeclient/core/LunarParity.class',
         'dev/forgeclient/ui/OverlayView.class',
         'mcmod.info', 'pack.mcmeta',
         'assets/forgeclient/textures/gui/stone.png',
+        'assets/forgeclient/textures/gui/logo.jpg',
+        'assets/forgeclient/textures/gui/title.jpg',
         'assets/forgeclient/lang/en_US.lang',
         'META-INF/THIRD_PARTY_NOTICES.md',
         'META-INF/licenses/BasicHUD-MIT.txt',
+        'META-INF/licenses/Lunar-Apollo-MIT.txt',
     }
     missing = required - set(names)
     if missing:
@@ -33,7 +38,7 @@ with zipfile.ZipFile(jar) as archive:
             if data[:4] != b'\xca\xfe\xba\xbe' or struct.unpack('>H', data[6:8])[0] != 52:
                 raise SystemExit('Not Java 8 bytecode: ' + name)
     mod = json.loads(archive.read('mcmod.info'))[0]
-    if (mod['modid'], mod['mcversion'], mod['version']) != ('forgeclient', '1.8.9', '0.1.0-alpha'):
+    if (mod['modid'], mod['mcversion'], mod['version']) != ('forgeclient', '1.8.9', '0.2.0-alpha'):
         raise SystemExit('Incorrect or unexpanded mod metadata')
     main = archive.read('dev/forgeclient/minecraft/ForgeClient.class')
     if b'getMinecraft' in main:

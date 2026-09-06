@@ -9,7 +9,7 @@ public final class ClientModule {
     public final HudPlacement placement;
     private final int defaultKey;
     private final LinkedHashMap<String,Setting> settings=new LinkedHashMap<>();
-    private boolean enabled,favorite;
+    private boolean enabled,favorite,available=true;
     private int key;
     private long revision;
     public ClientModule(String id,String name,Category category,String summary,String description,
@@ -25,7 +25,10 @@ public final class ClientModule {
     public Collection<Setting> settings(){return Collections.unmodifiableCollection(settings.values());}
     public Setting setting(String id){Setting s=settings.get(id);if(s==null)throw new IllegalArgumentException("Unknown setting "+id);return s;}
     public boolean enabled(){return enabled;}
-    public void enabled(boolean next){if(enabled!=next){enabled=next;revision++;}}
+    public boolean available(){return available;}
+    /** Marks a catalog-parity entry as visible but non-toggleable until its native handler exists. */
+    public ClientModule unavailable(){available=false;enabled=false;return this;}
+    public void enabled(boolean next){if(next&&!available)return;if(enabled!=next){enabled=next;revision++;}}
     public void toggle(){enabled(!enabled);}
     public boolean favorite(){return favorite;}
     public void favorite(boolean next){if(favorite!=next){favorite=next;revision++;}}
