@@ -1,6 +1,6 @@
 # Forge Client
 
-Forge Client is a client-side Minecraft **1.8.9** mod for **Minecraft Forge 11.15.1.2318**. The current 0.3 alpha combines a full-screen Right-Shift module UI, a resolution-independent Dawn-inspired title screen, performance-conscious HUD/rendering code and a large set of practical Lunar-inspired 1.8.9 features.
+Forge Client is a client-side Minecraft **1.8.9** mod for **Minecraft Forge 11.15.1.2318**. The current 0.4 alpha combines the Right-Shift client UI, the high-resolution Dawn-inspired title screen, an open-source-audited 89-module catalog, and a new native Forge-styled Hypixel Quickplay selector.
 
 > Forge Client is our product name and is independent of the Minecraft Forge project.
 
@@ -10,25 +10,29 @@ Forge Client is a client-side Minecraft **1.8.9** mod for **Minecraft Forge 11.1
 - Loader: **Minecraft Forge 1.8.9**
 - Open client: **Right Shift**
 - Live catalog: **89 implemented modules**
-- Placeholder / `PORTING` toggles: **0**
-- Configuration: local profiles and persistent HUD placement
-- Networking: no Forge Client telemetry or background server probes
+- Placeholder modules: **0**
+- Open-source implementation audit: **89 / 89 live modules covered**
+- Networking: no Forge Client telemetry, HTTP module traffic, or background ping probes
 
 The compiled development alpha is published by GitHub Actions to:
 
-`dist/Forge-Client-1.8.9-0.3.0-alpha.jar`
+`dist/Forge-Client-1.8.9-0.4.0-alpha.jar`
 
 A matching SHA-256 file and build/test receipts are generated beside it.
 
-## 0.3 changes
+## 0.4 changes
 
-- Removed the 0.2 Lunar roadmap placeholders. If a module appears in Forge's live UI, it has concrete 1.8.9 behavior.
-- Added functional Lunar-inspired Hypixel, Bed Wars, SkyBlock, Quickplay, scoreboard, PvP, team, minimap, hitbox, chunk/light overlay, WAILA, WorldEdit CUI, replay/rewind trail, item tracking, cooldown, combo, stopwatch, action-bar, inventory, F3, GUI-scale and other modules.
-- Kept Toggle Sprint intent across attack interruption and highlighted the enabled state in its HUD.
-- Rebuilt the title menu so artwork is only a smoothly filtered atmosphere layer; buttons, labels and wordmark are rendered natively at the current resolution instead of being baked into a scaled 800x450 bitmap.
-- Preserved the lower-allocation rendering/config path from 0.2.
+- Added a Forge-styled Quickplay selector: press the module's action bind to open categories + search, select a destination, and explicitly Join. Forge refuses to send `/play` commands off Hypixel.
+- Reworked the module implementation strategy around license-compatible open source. SkyblockAddons' MIT scoreboard snapshot approach is adapted directly; Apollo/BasicHUD remain MIT references; GPL/LGPL/AGPL/custom-restricted projects are behavior references only unless their obligations are deliberately adopted.
+- Added machine-readable provenance through `ModuleImplementationAudit`, covering all 89 live module IDs, plus a Java 8 CI contract suite.
+- Fixed Item Physics to change the actual 1.8.9 dropped-item render phase (`EntityItem.hoverStart`) instead of `rotationYaw`.
+- Rebuilt Inventory Mod as a real nine-slot hotbar HUD with item renders, stack overlays and selected-slot highlighting.
+- Upgraded Minimap from raw text to a terrain-following, loaded-block tile map with a facing marker.
+- Consolidated sidebar/Hypixel/Bed Wars/SkyBlock/SBA parsing into one cached immutable scoreboard snapshot to reduce repeated main-thread work.
+- Improved the NEU-style inspector using local `ExtraAttributes.id` and item lore without copying NEU's LGPL implementation.
+- Made inventory delta reporting deterministic and cached repeated item counts per HUD sample.
 
-See [`docs/PERFORMANCE_AND_PARITY.md`](docs/PERFORMANCE_AND_PARITY.md) for exact scope notes.
+See [`docs/MODULE_IMPLEMENTATION_AUDIT.md`](docs/MODULE_IMPLEMENTATION_AUDIT.md) and [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) for source/licensing decisions.
 
 ## Build
 
@@ -36,14 +40,8 @@ See [`docs/PERFORMANCE_AND_PARITY.md`](docs/PERFORMANCE_AND_PARITY.md) for exact
 ./gradlew clean check remapJar
 ```
 
-The workflow compiles the real Minecraft adapter, runs the core/UI suite on Java 8, remaps the Forge JAR and verifies required classes/resources before publishing.
+The workflow compiles the real Minecraft adapter, runs the original core/UI suite plus the 0.4 module/Quickplay contract suite on Java 8, remaps the Forge JAR and verifies required classes/resources/licenses before publishing.
 
 ## Alpha status
 
-A green build proves compilation, tests, remapping and packaging. It does **not** replace manual game QA. Before calling this stable, test the JAR in a real client across several GUI scales, exercise every module you intend to use, compare Hypixel responsiveness against vanilla/Lunar under the same network conditions, and benchmark frame pacing with identical video settings.
-
-## Third-party work
-
-Luna Mod Menu and Dawn / Feather Client were visual references only; their code/assets are not bundled. Lunar/Apollo's public MIT-licensed module catalog is used as reference metadata. OptiFine is not redistributed.
-
-See [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+A green build proves compilation, Java 8 tests, remapping, source-audit contracts and packaging. It does **not** replace authenticated in-game QA. Before calling this stable, exercise the modules you actually use in a real client, A/B Hypixel responsiveness against vanilla Forge/Lunar under identical conditions, and benchmark frame pacing with identical video settings.

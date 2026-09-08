@@ -10,7 +10,7 @@
     "authorList": [
       "Forge Client / The Gideon Project"
     ],
-    "credits": "CPS approach informed by BasicHUD (MIT); see bundled notices.",
+    "credits": "CPS informed by BasicHUD (MIT); Lunar public semantics from Apollo (MIT); scoreboard snapshot adapted from SkyblockAddons (MIT). See bundled notices.",
     "dependencies": []
   }
 ]
