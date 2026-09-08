@@ -2,7 +2,7 @@ package dev.forgeclient.core;
 
 /**
  * Lunar-inspired modules that have concrete Forge 1.8.9 behavior in LunarRuntime.
- * There are deliberately no roadmap/PORTING entries here: if it is in this catalog,
+ * There are deliberately no roadmap placeholder entries here: if it is in this catalog,
  * it is toggleable and has a runtime implementation.
  */
 public final class LunarFunctionalModules {

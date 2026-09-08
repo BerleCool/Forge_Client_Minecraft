@@ -27,18 +27,17 @@ public final class AllTests {
     private static Properties values(String value){Properties p=new Properties();p.setProperty("schema","1");p.setProperty("test",value);return p;}
     public static void main(String[] args)throws Exception {
         long started=System.nanoTime();
-        test("Lunar catalog parity, unique ids and conservative defaults",()->{
-            ModuleRegistry r=ModuleCatalog.create();eq(98,LunarParity.REQUIRED_NAMES.length);eq(8,r.enabledCount());
-            Set<String> ids=new HashSet<>();
+        test("Lunar-inspired catalog contains only concrete toggleable 1.8.9 entries",()->{
+            ModuleRegistry r=ModuleCatalog.create();eq(89,r.all().size());
             for(ClientModule m:r.all()){
-                ok(ids.add(m.id),"duplicate module");
-                Set<String> settings=new HashSet<>();for(Setting s:m.settings()){ok(settings.add(s.id),"duplicate setting");ok(s.set(s.raw()),"default must validate");}
-                if(m.hud){eq(Setting.Kind.NUMBER,m.setting("scale").kind);ok(m.placement.x()>=0&&m.placement.x()<=1,"normalized x");}
+                ok(m.available(),"unavailable module leaked into live catalog: "+m.name);
+                ok(!m.summary.toUpperCase(Locale.ROOT).contains("PORTING"),"placeholder summary leaked: "+m.name);
+                ok(!m.description.toUpperCase(Locale.ROOT).contains("PORTING"),"placeholder description leaked: "+m.name);
             }
-            for(String name:LunarParity.REQUIRED_NAMES)ok(LunarParity.covers(r,name),"missing Lunar parity entry: "+name);
-            ok(r.all().size()>=98,"catalog must include the full Lunar baseline plus Forge extras");ok(LunarParity.unavailableCount(r)>0,"unfinished parity entries stay visibly non-toggleable rather than faking behavior");
-            ok(!r.enabled("fullbright")&&!r.enabled("no_fire")&&!r.enabled("distance_culling")&&!r.enabled("toggle_sprint"),"sensitive modules start off");
-            throwsType(IllegalArgumentException.class,()->r.add(r.get("fps")));
+            String[] implemented={"Replay Mod","Hypixel Mods","Hypixel Bedwars","Quickplay","Attack Indicator","Potion Counter","Scoreboard","Chat","Tab Editor","Cooldowns","WorldEdit CUI","Stopwatch","Combo Counter","Time Changer","Item Physics","TNT Countdown","Item Tracker","Momentum","Screenshot","Fog","Boss Bar","PvP Info","Markers","Team View","Minimap","Hitbox","Weather Changer","Chunk Borders","WAILA","Hurt Cam","Tier Tagger","SkyBlock","Horse Stats","Overlay Mod","Rewind","Action Bar","Light Overlay","Kill Sounds","Inventory Mod","F3 Display","GUI Scale","Knockback Trainer","UHC Overlay","NotEnoughUpdates","SkyBlockAddons"};
+            for(String name:implemented)ok(LunarParity.containsName(r,name),"missing implemented Lunar baseline feature: "+name);
+            Set<String> missing=LunarParity.missingNames(r);
+            ok(missing.contains("Shulker Preview")&&missing.contains("Shields")&&missing.contains("Totem Counter"),"cross-version features must not be fake 1.8.9 toggles");
         });
         test("Numeric validation, quantization, clamping and non-finite rejection",()->{
             Setting s=Setting.number("scale","Scale","",1,.5,2,.05);

@@ -119,7 +119,7 @@ public final class OverlayView {
     private void footer(Canvas c) {
         c.rect(0,layout.height-24,layout.width,24,0xF5121116);
         c.rect(0,layout.height-24,layout.width,1,0xFF312830);
-        c.text("FORGE  /  0.1.0-ALPHA",12,layout.height-15,Theme.MUTED,false);
+        c.text("FORGE  /  0.3.0-ALPHA",12,layout.height-15,Theme.MUTED,false);
         if(layout.width>690) c.text("PROFILE: "+host.activeProfile().toUpperCase(Locale.ROOT),layout.width/2-60,layout.height-15,Theme.MUTED,false);
         String hint=tab==Tab.HUD?"DRAG / SCROLL TO SCALE":"RSHIFT  CLOSE   /   TAB  NAVIGATE";
         c.text(hint,layout.width-c.textWidth(hint)-12,layout.height-15,Theme.MUTED,false);
@@ -254,7 +254,7 @@ public final class OverlayView {
         int descLines=Math.min(4,Theme.wrap(c,m.description,w).size());
         Theme.wrapped(c,m.description,x,y,w,Theme.MUTED,4);y+=descLines*12+12;
         Theme.panel(c,x,y,w,29,0xFF242128,false);
-        c.text(!m.available()?"PORTING":(m.enabled()?"ENABLED":"DISABLED"),x+9,y+10,m.enabled()?Theme.GOLD:Theme.MUTED,false);
+        c.text(!m.available()?"UNAVAILABLE":(m.enabled()?"ENABLED":"DISABLED"),x+9,y+10,m.enabled()?Theme.GOLD:Theme.MUTED,false);
         if(m.available()){Theme.toggle(c,x+w-35,y+7,m.enabled(),false);hit("inspector-toggle",new Rect(x,y,w,29),m::toggle,null);}
         else c.text("COMING SOON",x+w-83,y+10,Theme.DIM,false);y+=38;
         button(c,"favorite",new Rect(x,y,52,22),m.favorite()?"* PIN":"PIN",m.favorite(),()->m.favorite(!m.favorite()));

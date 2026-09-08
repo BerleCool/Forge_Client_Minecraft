@@ -77,7 +77,7 @@ public final class ModuleCatalog {
             .add(Setting.bool("coordinates","Hide coordinates","Hide coordinates and waypoint names in Forge's HUD.",true))
             .add(Setting.bool("server","Hide server","Replace the displayed server name.",true))
             .add(Setting.bool("player","Hide username","Replace your name in Forge's overlay.",true)));
-        LunarParity.addMissing(r);
+        LunarFunctionalModules.add(r);
         return r;
     }
     private static ClientModule hud(ModuleRegistry r, String id, String name, String summary, String description, boolean enabled, double x, double y) {
