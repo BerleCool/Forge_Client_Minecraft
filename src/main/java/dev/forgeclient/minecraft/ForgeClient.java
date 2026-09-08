@@ -24,7 +24,7 @@ import java.util.Properties;
         acceptedMinecraftVersions="[1.8.9]",clientSideOnly=true,acceptableRemoteVersions="*",
         guiFactory="dev.forgeclient.minecraft.ForgeGuiFactory")
 public final class ForgeClient {
-    public static final String MOD_ID="forgeclient",VERSION="0.3.0-alpha";
+    public static final String MOD_ID="forgeclient",VERSION="0.4.0-alpha";
     @Mod.Instance(MOD_ID) private static ForgeClient INSTANCE;
     public static ForgeClient instance(){if(INSTANCE==null)throw new IllegalStateException("Forge Client is not initialized");return INSTANCE;}
     public final ModuleRegistry modules=ModuleCatalog.create();

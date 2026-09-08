@@ -14,8 +14,8 @@ public final class LunarFunctionalModules {
             .add(Setting.bool("trail","Render trail","Draw the recorded movement path in-world.",true));
         hud(r,"lunar_hypixel","Hypixel Mods","Hypixel session HUD","Detects Hypixel from the connected server address and summarizes the current scoreboard locally. No Hypixel API requests.",false,.02,.58);
         hud(r,"lunar_bedwars","Hypixel Bedwars","Bed Wars scoreboard","Extracts useful Bed Wars lines from the scoreboard you already receive from the server.",false,.02,.64);
-        action(r,"lunar_quickplay","Quickplay","One-key Hypixel queue","When enabled and bound, sends the selected /play command only when you press its key.")
-            .add(Setting.choice("mode","Queue","Hypixel game queue used by the hotkey.","Bed Wars Solo","Bed Wars Solo","Bed Wars Doubles","SkyWars Solo","Duels","Lobby"));
+        action(r,"lunar_quickplay","Quickplay","Forge-styled Hypixel queue selector","Press the bound action key to open a native Forge selector with categories, search and keyboard navigation. Commands are sent only after you explicitly choose Join and only on hypixel.net.")
+            .add(Setting.choice("mode","Default selection","Initial destination highlighted when the selector opens.","Bed Wars Solo","Bed Wars Solo","Bed Wars Doubles","SkyWars Solo","Duels","Lobby"));
         hud(r,"lunar_attack","Attack Indicator","Attack feedback","Shows a short local hit pulse and the last targeted entity. It does not change attack timing or reach.",false,.50,.86);
         hud(r,"lunar_potion_counter","Potion Counter","Potion inventory count","Counts potion stacks in your own inventory on a throttled client tick.",false,.86,.34);
         hud(r,"lunar_scoreboard","Scoreboard","Movable scoreboard mirror","Mirrors the server-provided sidebar scoreboard into a movable Forge HUD widget.",false,.80,.20)
@@ -30,7 +30,7 @@ public final class LunarFunctionalModules {
             .add(Setting.number("timeout","Combo timeout","Seconds before a combo expires.",2,1,5,.25));
         r.add(module("lunar_time","Time Changer",Category.VISUAL,"Local world time","Overrides the client-side visual world time while enabled. It never sends a time command to the server.",false)
             .add(Setting.choice("time","Visual time","Local visual time preset.","Day","Day","Sunset","Night","Sunrise")));
-        r.add(module("lunar_item_physics","Item Physics",Category.VISUAL,"Smoother dropped-item motion","Applies a bounded client-only rotation to loaded dropped-item entities while enabled.",false)
+        r.add(module("lunar_item_physics","Item Physics",Category.VISUAL,"Dropped-item spin control","Advances the vanilla 1.8.9 EntityItem hover phase used by its renderer, producing a visible client-only spin without touching item physics or packets.",false)
             .add(Setting.number("speed","Spin speed","Degrees of local visual rotation per tick.",2,.5,8,.5)));
         hud(r,"lunar_tnt","TNT Countdown","Nearest TNT fuse","Displays the nearest loaded primed TNT and its remaining fuse time.",false,.50,.74);
         hud(r,"lunar_item_tracker","Item Tracker","Inventory delta tracker","Tracks local inventory count changes and displays the latest item gain/loss without network requests.",false,.02,.76);
@@ -45,7 +45,7 @@ public final class LunarFunctionalModules {
         r.add(module("lunar_markers","Markers",Category.VISUAL,"Nearest waypoint beacon","Draws a depth-tested vertical marker at your nearest Forge waypoint.",false));
         hud(r,"lunar_team_view","Team View","Nearby teammates","Counts loaded nearby players on your scoreboard team and shows the nearest distance.",false,.86,.50)
             .add(Setting.number("range","Range","Maximum loaded-player range in blocks.",64,16,160,8));
-        hud(r,"lunar_minimap","Minimap","Local block minimap","Builds a tiny text-grid map from already-loaded blocks around you. It never loads chunks or shows hidden entities.",false,.02,.30)
+        hud(r,"lunar_minimap","Minimap","Loaded-block minimap","Builds a bounded top-down map from already-loaded blocks around you and renders it as a Forge-styled tile HUD. It never loads chunks or reveals hidden entities.",false,.02,.30)
             .add(Setting.number("radius","Radius","Loaded-block radius sampled around the player.",4,2,6,1));
         r.add(module("lunar_hitbox","Hitbox",Category.VISUAL,"Target hitbox","Draws the normal bounding box of the entity currently under your crosshair with depth testing preserved.",false));
         r.add(module("lunar_weather","Weather Changer",Category.VISUAL,"Local clear weather","Suppresses rain/thunder strength on the client while enabled. It does not change server weather.",false));
@@ -68,8 +68,8 @@ public final class LunarFunctionalModules {
             .add(Setting.choice("scale","GUI scale","Vanilla GUI scale preset.","Auto","Auto","Small","Normal","Large")));
         hud(r,"lunar_knockback","Knockback Trainer","Local knockback meter","Samples your local horizontal velocity when hurt time starts and displays the latest magnitude.",false,.50,.34);
         hud(r,"lunar_uhc","UHC Overlay","UHC essentials","Shows health, absorption, coordinates, arrows and golden apples from your local state.",false,.86,.66);
-        hud(r,"lunar_neu","NotEnoughUpdates","SkyBlock item inspector","Provides a lightweight 1.8.9 SkyBlock held-item/lore inspector using the item data already present on the client.",false,.70,.76);
-        hud(r,"lunar_sba","SkyBlockAddons","SkyBlock status HUD","Provides a lightweight SkyBlock action-bar/scoreboard status panel using client-received data.",false,.70,.82);
+        hud(r,"lunar_neu","NotEnoughUpdates","SkyBlock item inspector","License-safe NEU-style inspector using local vanilla NBT/lore: display name, ExtraAttributes id and lore. The LGPL NEU codebase is behavior reference only and is not copied.",false,.70,.76);
+        hud(r,"lunar_sba","SkyBlockAddons","SkyBlock status HUD","Uses an MIT-adapted SkyblockAddons-style sidebar snapshot plus the local action bar to build a clean SkyBlock status panel from client-received data.",false,.70,.82);
         r.add(module("lunar_worldedit","WorldEdit CUI",Category.VISUAL,"Wooden-axe selection CUI","While holding a wooden axe, left/right clicks on loaded blocks set local CUI corners and render the selection box.",false));
     }
 

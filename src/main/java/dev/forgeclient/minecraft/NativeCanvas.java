@@ -104,7 +104,7 @@ public final class NativeCanvas implements Canvas {
         GlStateManager.pushMatrix();
         try{
             GlStateManager.enableDepth();GlStateManager.depthMask(true);RenderHelper.enableGUIStandardItemLighting();
-            mc.getRenderItem().renderItemAndEffectIntoGUI((ItemStack)item.stack,x,y);
+            mc.getRenderItem().renderItemAndEffectIntoGUI((ItemStack)item.stack,x,y);mc.getRenderItem().renderItemOverlays(mc.fontRendererObj,(ItemStack)item.stack,x,y);
         }finally{
             RenderHelper.disableStandardItemLighting();GlStateManager.disableDepth();GlStateManager.depthMask(false);
             GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA,GL11.GL_ONE_MINUS_SRC_ALPHA,GL11.GL_ONE,GL11.GL_ZERO);

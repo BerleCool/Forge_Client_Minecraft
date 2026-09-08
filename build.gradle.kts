@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "dev.forgeclient"
-version = "0.3.0-alpha"
+version = "0.4.0-alpha"
 base { archivesName.set("forge-client") }
 
 java {
@@ -78,4 +78,11 @@ val coreTests by tasks.registering(JavaExec::class) {
     enableAssertions = true
     args(layout.buildDirectory.file("reports/core-tests.json").get().asFile.absolutePath)
 }
-tasks.check { dependsOn(coreTests) }
+val v4ContractTests by tasks.registering(JavaExec::class) {
+    dependsOn(tasks.testClasses)
+    classpath = sourceSets.test.get().runtimeClasspath
+    mainClass.set("dev.forgeclient.tests.V4ContractTests")
+    javaLauncher.set(javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(8)) })
+    enableAssertions = true
+}
+tasks.check { dependsOn(coreTests, v4ContractTests) }
