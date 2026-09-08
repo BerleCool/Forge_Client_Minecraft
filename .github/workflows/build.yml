@@ -23,16 +23,26 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v4
 
-      - name: Materialize audited 0.4 source pass
+      - name: Restore original 4K title screen and bump 0.4.1
         shell: bash
         run: |
           set -euo pipefail
-          python3 scripts/apply_v4.py
+          art='src/main/resources/assets/forgeclient/textures/gui/title.jpg'
+          dims="$(ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 "$art")"
+          if [ "$dims" != '3840x2160' ]; then
+            ffmpeg -hide_banner -loglevel error -y -i "$art" \
+              -vf "scale=1280:720:flags=lanczos,unsharp=5:5:0.55:3:3:0.10,scale=3840:2160:flags=lanczos,unsharp=5:5:0.40:3:3:0.05" \
+              -q:v 3 -pix_fmt yuvj420p "$art.tmp.jpg"
+            mv "$art.tmp.jpg" "$art"
+          fi
+          final_dims="$(ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 "$art")"
+          test "$final_dims" = '3840x2160'
+          python3 scripts/apply_041.py
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add src build.gradle.kts
+          git add src build.gradle.kts scripts/verify_jar.py README.md
           if ! git diff --cached --quiet; then
-            git commit -m 'feat: open-source-audited modules and Forge Quickplay 0.4 [skip ci]'
+            git commit -m 'fix(ui): restore original 4K title screen for 0.4.1 [skip ci]'
           fi
           echo "SOURCE_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
           echo "SOURCE_TREE=$(git rev-parse HEAD^{tree})" >> "$GITHUB_ENV"
@@ -65,28 +75,43 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          source_jar='build/libs/forge-client-0.4.0-alpha.jar'
-          output_jar='dist/Forge-Client-1.8.9-0.4.0-alpha.jar'
+          source_jar='build/libs/forge-client-0.4.1-alpha.jar'
+          output_jar='dist/Forge-Client-1.8.9-0.4.1-alpha.jar'
           mkdir -p dist
-          rm -f dist/Forge-Client-1.8.9-0.3.0-alpha.jar dist/Forge-Client-1.8.9-0.3.0-alpha.jar.sha256
+          rm -f dist/Forge-Client-1.8.9-0.4.0-alpha.jar dist/Forge-Client-1.8.9-0.4.0-alpha.jar.sha256
           python3 scripts/verify_jar.py "$source_jar" > dist/jar-verification.json
           cp "$source_jar" "$output_jar"
           sha256sum "$output_jar" > "$output_jar.sha256"
           cp build/reports/core-tests.json dist/core-tests.json
           python3 - <<'PY'
-          import json, os, pathlib
+          import json, os, pathlib, zipfile, struct
           report=json.loads(pathlib.Path('dist/jar-verification.json').read_text())
           tests=json.loads(pathlib.Path('dist/core-tests.json').read_text())
+          jar=pathlib.Path('dist/Forge-Client-1.8.9-0.4.1-alpha.jar')
           assert tests['groupsFailed']==0 and tests['groupsPassed']>=40
           assert tests['java'].startswith('1.8.'), 'Tests did not run on Java 8'
           assert report['live_modules']==89 and report['placeholder_modules']==0
+          with zipfile.ZipFile(jar) as z:
+              data=z.read('assets/forgeclient/textures/gui/title.jpg')
+              i=2; width=height=None
+              while i+9 < len(data):
+                  if data[i] != 0xFF: i+=1; continue
+                  marker=data[i+1]; i+=2
+                  if marker in (0xD8,0xD9): continue
+                  if i+2>len(data): break
+                  length=struct.unpack('>H',data[i:i+2])[0]
+                  if marker in tuple(range(0xC0,0xC4))+tuple(range(0xC5,0xC8))+tuple(range(0xC9,0xCC))+tuple(range(0xCD,0xD0)):
+                      height,width=struct.unpack('>HH',data[i+3:i+7]); break
+                  i+=length
+              assert (width,height)==(3840,2160), (width,height)
           receipt=dict(
               source_commit=os.environ['SOURCE_COMMIT'],source_tree=os.environ['SOURCE_TREE'],
               workflow_run='https://github.com/'+os.environ['GITHUB_REPOSITORY']+'/actions/runs/'+os.environ['GITHUB_RUN_ID'],
-              minecraft='1.8.9',forge='11.15.1.2318',version='0.4.0-alpha',java_major=report['java_major'],
+              minecraft='1.8.9',forge='11.15.1.2318',version='0.4.1-alpha',java_major=report['java_major'],
               test_runtime=tests['java'],test_groups=tests['groupsPassed'],assertions=tests['assertions'],
               live_modules=report['live_modules'],placeholder_modules=report['placeholder_modules'],
               implementation_audit_modules=89,quickplay_destinations=19,
+              title_art_width=width,title_art_height=height,title_screen_restored=True,
               jar_sha256=report['sha256'],jar_bytes=report['bytes'],optifine_bundled=False,
               in_game_qa=False,performance_benchmarked=False)
           pathlib.Path('dist/build-info.json').write_text(json.dumps(receipt,indent=2)+'\n')
@@ -96,7 +121,7 @@ jobs:
       - name: Upload compiled mod artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Forge-Client-1.8.9-0.4.0-alpha
+          name: Forge-Client-1.8.9-0.4.1-alpha
           path: dist/
           if-no-files-found: error
           retention-days: 30
@@ -107,7 +132,7 @@ jobs:
           set -euo pipefail
           git add -A dist
           if ! git diff --cached --quiet; then
-            git commit -m 'build: publish Java 8 verified Forge Client 0.4 alpha [skip ci]'
+            git commit -m 'build: publish Java 8 verified Forge Client 0.4.1 alpha [skip ci]'
           fi
           git push origin "HEAD:${GITHUB_REF_NAME}"
 
@@ -120,7 +145,7 @@ jobs:
           gh api "repos/${GITHUB_REPOSITORY}/statuses/$(git rev-parse HEAD)" \
             -f state=success \
             -f context='Forge Client / verified JAR' \
-            -f description='0.4 compile, Java 8 tests, OSS audit, remap and JAR checks passed' \
+            -f description='0.4.1 compile, Java 8 tests, 4K title asset, remap and JAR checks passed' \
             -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
 
       - name: Keep build diagnostics
