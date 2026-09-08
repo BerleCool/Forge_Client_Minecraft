@@ -11,6 +11,7 @@ def patch(path, fn):
 
 # Wire the functional catalog directly instead of the old placeholder injector.
 patch(Path('src/main/java/dev/forgeclient/core/ModuleCatalog.java'),lambda s:s.replace('LunarParity.addMissing(r);','LunarFunctionalModules.add(r);'))
+patch(Path('src/main/java/dev/forgeclient/core/LunarFunctionalModules.java'),lambda s:s.replace('roadmap/PORTING entries','roadmap placeholder entries'))
 
 # Register the runtime exactly once and bump the mod version.
 def forge(s):
