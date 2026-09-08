@@ -1,0 +1,16 @@
+[
+  {
+    "modid": "forgeclient",
+    "name": "Forge Client",
+    "description": "Client-side HUD, visual, utility and performance modules. Development alpha; manual game QA still required. Independent of Minecraft Forge.",
+    "version": "${version}",
+    "mcversion": "1.8.9",
+    "url": "https://github.com/BerleCool/Forge_Client_Minecraft",
+    "logoFile": "assets/forgeclient/textures/gui/logo.jpg",
+    "authorList": [
+      "Forge Client / The Gideon Project"
+    ],
+    "credits": "CPS informed by BasicHUD (MIT); Lunar public semantics from Apollo (MIT); scoreboard snapshot adapted from SkyblockAddons (MIT). See bundled notices.",
+    "dependencies": []
+  }
+]

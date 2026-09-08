@@ -1,0 +1,25 @@
+{
+  "jar": "build/libs/forge-client-0.4.1-alpha.jar",
+  "bytes": 1016973,
+  "sha256": "cb81fd1990bf954e616904b0ac6d368593bdc01a8a96ed7f8d90bef74be56d56",
+  "java_major": 52,
+  "classes": 53,
+  "live_modules": 89,
+  "placeholder_modules": 0,
+  "quickplay_selector": true,
+  "implementation_audit_modules": 89,
+  "mod": {
+    "modid": "forgeclient",
+    "name": "Forge Client",
+    "description": "Client-side HUD, visual, utility and performance modules. Development alpha; manual game QA still required. Independent of Minecraft Forge.",
+    "version": "0.4.1-alpha",
+    "mcversion": "1.8.9",
+    "url": "https://github.com/BerleCool/Forge_Client_Minecraft",
+    "logoFile": "assets/forgeclient/textures/gui/logo.jpg",
+    "authorList": [
+      "Forge Client / The Gideon Project"
+    ],
+    "credits": "CPS informed by BasicHUD (MIT); Lunar public semantics from Apollo (MIT); scoreboard snapshot adapted from SkyblockAddons (MIT). See bundled notices.",
+    "dependencies": []
+  }
+}
