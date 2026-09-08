@@ -4,10 +4,10 @@
   "java": "1.8.0_504",
   "groupsPassed": 40,
   "groupsFailed": 0,
-  "assertions": 11464,
-  "elapsedMillis": 1219,
+  "assertions": 11472,
+  "elapsedMillis": 1030,
   "groups": [
-    {"name":"Lunar catalog parity, unique ids and conservative defaults","passed":true,"assertions":549},
+    {"name":"Lunar-inspired catalog contains only concrete toggleable 1.8.9 entries","passed":true,"assertions":314},
     {"name":"Numeric validation, quantization, clamping and non-finite rejection","passed":true,"assertions":17},
     {"name":"Boolean and choice validation, reverse cycle, reset","passed":true,"assertions":8},
     {"name":"Module revision changes only for mutations","passed":true,"assertions":4},
@@ -45,7 +45,7 @@
     {"name":"HUD reset, edit-mode return and explicit close behavior","passed":true,"assertions":4},
     {"name":"HUD streamer privacy suppresses coordinates/waypoint only in Forge","passed":true,"assertions":3},
     {"name":"Profiles apply presets, save/load snapshots and require overwrite confirmation","passed":true,"assertions":6},
-    {"name":"All HUD widget bounds fit effective screen sizes including large scales","passed":true,"assertions":209},
+    {"name":"All HUD widget bounds fit effective screen sizes including large scales","passed":true,"assertions":452},
     {"name":"Telemetry world clear removes stale position, item, key and click data","passed":true,"assertions":13}
   ]
 }
