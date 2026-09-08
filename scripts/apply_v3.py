@@ -21,6 +21,13 @@ def forge(s):
 patch(Path('src/main/java/dev/forgeclient/minecraft/ForgeClient.java'),forge)
 patch(Path('build.gradle.kts'),lambda s:s.replace('version = "0.2.0-alpha"','version = "0.3.0-alpha"'))
 
+# Remove the obsolete placeholder label from the shared live UI and keep its displayed version current.
+def overlay(s):
+    s=s.replace('!m.available()?"PORTING":(m.enabled()?"ENABLED":"DISABLED")','!m.available()?"UNAVAILABLE":(m.enabled()?"ENABLED":"DISABLED")')
+    s=s.replace('FORGE  /  0.1.0-ALPHA','FORGE  /  0.3.0-ALPHA')
+    return s
+patch(Path('src/main/java/dev/forgeclient/ui/OverlayView.java'),overlay)
+
 # Upgrade the existing dependency-free test suite without removing its prior checks.
 def tests(s):
     s=s.replace('eq(43,r.all().size());eq(8,r.enabledCount());','eq(89,r.all().size());eq(8,r.enabledCount());')
