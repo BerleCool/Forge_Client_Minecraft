@@ -1,6 +1,6 @@
 # Forge Client
 
-Forge Client is a client-side Minecraft **1.8.9** mod for **Minecraft Forge 11.15.1.2318**. The current 0.4 alpha combines the Right-Shift client UI, the high-resolution Dawn-inspired title screen, an open-source-audited 89-module catalog, and a new native Forge-styled Hypixel Quickplay selector.
+Forge Client is a client-side Minecraft **1.8.9** mod for **Minecraft Forge 11.15.1.2318**. The current 0.4.1 alpha combines the Right-Shift client UI, the high-resolution Dawn-inspired title screen, an open-source-audited 89-module catalog, and a new native Forge-styled Hypixel Quickplay selector.
 
 > Forge Client is our product name and is independent of the Minecraft Forge project.
 
@@ -16,9 +16,16 @@ Forge Client is a client-side Minecraft **1.8.9** mod for **Minecraft Forge 11.1
 
 The compiled development alpha is published by GitHub Actions to:
 
-`dist/Forge-Client-1.8.9-0.4.0-alpha.jar`
+`dist/Forge-Client-1.8.9-0.4.1-alpha.jar`
 
 A matching SHA-256 file and build/test receipts are generated beside it.
+
+## 0.4.1 title-screen restoration
+
+- Restored the exact first Dawn-style menu composition and baked-control layout instead of the later native-control redesign.
+- Rebuilt the title artwork resource at **3840x2160** using a high-quality Lanczos + restrained sharpening pass, preserving the original composition rather than changing the design.
+- Added explicit linear texture sampling for clean downscaling at 1080p/1440p/4K while keeping the original 800x450 logical hitbox map.
+- No module/runtime behavior was changed from 0.4.
 
 ## 0.4 changes
 

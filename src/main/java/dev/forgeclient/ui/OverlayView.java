@@ -119,7 +119,7 @@ public final class OverlayView {
     private void footer(Canvas c) {
         c.rect(0,layout.height-24,layout.width,24,0xF5121116);
         c.rect(0,layout.height-24,layout.width,1,0xFF312830);
-        c.text("FORGE  /  0.4.0-ALPHA",12,layout.height-15,Theme.MUTED,false);
+        c.text("FORGE  /  0.4.1-ALPHA",12,layout.height-15,Theme.MUTED,false);
         if(layout.width>690) c.text("PROFILE: "+host.activeProfile().toUpperCase(Locale.ROOT),layout.width/2-60,layout.height-15,Theme.MUTED,false);
         String hint=tab==Tab.HUD?"DRAG / SCROLL TO SCALE":"RSHIFT  CLOSE   /   TAB  NAVIGATE";
         c.text(hint,layout.width-c.textWidth(hint)-12,layout.height-15,Theme.MUTED,false);

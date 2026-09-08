@@ -44,7 +44,7 @@ with zipfile.ZipFile(jar) as archive:
             if data[:4] != b'\xca\xfe\xba\xbe' or struct.unpack('>H', data[6:8])[0] != 52:
                 raise SystemExit('Not Java 8 bytecode: ' + name)
     mod = json.loads(archive.read('mcmod.info'))[0]
-    if (mod['modid'], mod['mcversion'], mod['version']) != ('forgeclient', '1.8.9', '0.4.0-alpha'):
+    if (mod['modid'], mod['mcversion'], mod['version']) != ('forgeclient', '1.8.9', '0.4.1-alpha'):
         raise SystemExit('Incorrect or unexpanded mod metadata')
     main = archive.read('dev/forgeclient/minecraft/ForgeClient.class')
     if b'getMinecraft' in main:
