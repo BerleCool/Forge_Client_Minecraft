@@ -20,6 +20,7 @@ def forge(s):
     if 'new LunarRuntime(this)' not in s:s=s.replace(needle,needle+'\n        MinecraftForge.EVENT_BUS.register(new LunarRuntime(this));')
     return s
 patch(Path('src/main/java/dev/forgeclient/minecraft/ForgeClient.java'),forge)
+patch(Path('src/main/java/dev/forgeclient/minecraft/LunarRuntime.java'),lambda s:s.replace('best.getFuse()/20D','best.fuse/20D'))
 patch(Path('build.gradle.kts'),lambda s:s.replace('version = "0.2.0-alpha"','version = "0.3.0-alpha"'))
 
 # Remove the obsolete placeholder label from the shared live UI and keep its displayed version current.
