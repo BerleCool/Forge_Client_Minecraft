@@ -5,7 +5,7 @@
   "groupsPassed": 40,
   "groupsFailed": 0,
   "assertions": 11472,
-  "elapsedMillis": 1030,
+  "elapsedMillis": 1068,
   "groups": [
     {"name":"Lunar-inspired catalog contains only concrete toggleable 1.8.9 entries","passed":true,"assertions":314},
     {"name":"Numeric validation, quantization, clamping and non-finite rejection","passed":true,"assertions":17},
