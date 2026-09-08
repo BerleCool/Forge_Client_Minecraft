@@ -23,20 +23,21 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v4
 
+      - name: Install Java 8 compiler/runtime
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+
       - name: Restore original 4K title screen and bump 0.4.1
         shell: bash
         run: |
           set -euo pipefail
           art='src/main/resources/assets/forgeclient/textures/gui/title.jpg'
-          dims="$(ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 "$art")"
-          if [ "$dims" != '3840x2160' ]; then
-            ffmpeg -hide_banner -loglevel error -y -i "$art" \
-              -vf "scale=1280:720:flags=lanczos,unsharp=5:5:0.55:3:3:0.10,scale=3840:2160:flags=lanczos,unsharp=5:5:0.40:3:3:0.05" \
-              -q:v 3 -pix_fmt yuvj420p "$art.tmp.jpg"
-            mv "$art.tmp.jpg" "$art"
-          fi
-          final_dims="$(ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 "$art")"
-          test "$final_dims" = '3840x2160'
+          rm -rf build/title-tool
+          mkdir -p build/title-tool
+          javac -source 8 -target 8 -Xlint:none -d build/title-tool scripts/UpscaleTitle.java
+          java -Djava.awt.headless=true -cp build/title-tool UpscaleTitle "$art"
           python3 scripts/apply_041.py
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
@@ -46,12 +47,6 @@ jobs:
           fi
           echo "SOURCE_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
           echo "SOURCE_TREE=$(git rev-parse HEAD^{tree})" >> "$GITHUB_ENV"
-
-      - name: Install Java 8 compiler/runtime
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '8'
 
       - name: Install Java 17 for Gradle
         uses: actions/setup-java@v4
